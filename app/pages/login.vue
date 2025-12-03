@@ -1,104 +1,93 @@
+<script setup lang="ts">
+const { login, isAuthenticated } = useAuth()
+const router = useRouter()
+
+const form = reactive({
+  email: '',
+  password: ''
+})
+
+const loading = ref(false)
+const error = ref('')
+
+// Rediriger si déjà authentifié
+watchEffect(() => {
+  if (isAuthenticated.value) {
+    router.push('/')
+  }
+})
+
+const handleLogin = async () => {
+  loading.value = true
+  error.value = ''
+
+  const result = await login(form.email, form.password)
+
+  if (result.success) {
+    router.push('/')
+  } else {
+    error.value = result.error
+  }
+
+  loading.value = false
+}
+</script>
+
 <template>
-  <div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-      <h1 class="text-3xl font-bold text-center mb-6">{{ isLogin ? 'Connexion' : 'Inscription' }}</h1>
+  <div class="min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-[#262620] mb-2">Connexion</h2>
+        <p class="text-[#899878]">Accédez à votre compte</p>
+      </div>
 
-      <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
-        <div v-if="!isLogin">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-          <input
-            v-model="name"
-            type="text"
-            placeholder="Votre nom"
-            class="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+      <div class="bg-white border border-[#899878]/20 rounded-lg p-8">
+        <form @submit.prevent="handleLogin" class="space-y-6">
+          <div>
+            <label for="email" class="block text-sm font-medium text-[#262620] mb-2">
+              Email
+            </label>
+            <input
+              id="email"
+              v-model="form.email"
+              type="email"
+              required
+              class="w-full px-4 py-3 bg-[#e4e6c3] border border-[#899878]/20 rounded text-[#262620] focus:outline-none focus:border-[#899878] transition-colors"
+            />
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-medium text-[#262620] mb-2">
+              Mot de passe
+            </label>
+            <input
+              id="password"
+              v-model="form.password"
+              type="password"
+              required
+              class="w-full px-4 py-3 bg-[#e4e6c3] border border-[#899878]/20 rounded text-[#262620] focus:outline-none focus:border-[#899878] transition-colors"
+            />
+          </div>
+
+          <div v-if="error" class="p-3 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
+            {{ error }}
+          </div>
+
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-[#899878] text-white hover:cursor-pointer font-medium py-3 rounded hover:bg-[#899878]/80 transition-colors disabled:opacity-50"
+          >
+            {{ loading ? 'Connexion...' : 'Se connecter' }}
+          </button>
+        </form>
+
+        <div class="mt-6 text-center">
+          <NuxtLink to="/" class="text-sm text-[#899878] hover:text-[#262620] transition-colors">
+            ← Retour à l'accueil
+          </NuxtLink>
         </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input
-            v-model="email"
-            type="email"
-            placeholder="votre@email.com"
-            class="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-          <input
-            v-model="password"
-            type="password"
-            placeholder="••••••••"
-            class="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          class="bg-blue-500 text-white p-3 rounded font-semibold hover:bg-blue-600 disabled:bg-gray-400 transition"
-          :disabled="auth.isLoading"
-        >
-          {{ auth.isLoading ? 'Chargement...' : (isLogin ? 'Se connecter' : 'S\'inscrire') }}
-        </button>
-      </form>
-
-      <p v-if="errorMsg" class="text-red-500 mt-4 text-center text-sm">{{ errorMsg }}</p>
-
-      <div class="mt-6 text-center">
-        <button
-          @click="toggleMode"
-          class="text-blue-500 hover:underline text-sm"
-        >
-          {{ isLogin ? 'Pas encore de compte ? Inscrivez-vous' : 'Déjà un compte ? Connectez-vous' }}
-        </button>
       </div>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { useAuthStore } from '~/stores/auth'
-
-definePageMeta({
-  layout: false,
-})
-
-const auth = useAuthStore()
-const email = ref('')
-const password = ref('')
-const name = ref('')
-const errorMsg = ref('')
-const isLogin = ref(true)
-
-const toggleMode = () => {
-  isLogin.value = !isLogin.value
-  errorMsg.value = ''
-}
-
-async function handleSubmit() {
-  errorMsg.value = ''
-
-  try {
-    if (isLogin.value) {
-      await auth.login(email.value, password.value)
-    } else {
-      await auth.register(email.value, password.value, name.value)
-    }
-    navigateTo('/dashboard')
-  } catch (err) {
-    errorMsg.value = isLogin.value
-      ? 'Identifiants incorrects.'
-      : 'Erreur lors de l\'inscription. Veuillez réessayer.'
-  }
-}
-
-onMounted(() => {
-  if (auth.isAuthenticated) {
-    navigateTo('/dashboard')
-  }
-})
-</script>
