@@ -14,11 +14,9 @@ export const useAuth = () => {
         }
       })
 
-      // L'API retourne juste { token: "..." }
       token.value = response.token
       user.value = { email }
 
-      // Stocke le token et l'email dans localStorage pour persistence
       if (import.meta.client) {
         localStorage.setItem('auth_token', response.token)
         localStorage.setItem('auth_user', JSON.stringify({ email }))
