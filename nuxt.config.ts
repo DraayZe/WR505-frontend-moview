@@ -13,5 +13,14 @@ export default defineNuxtConfig({
     public: {
       apiBase: 'http://localhost:8319'
     }
-  }
+  },
+  modules: ['nuxt-gql-pulse'],
+
+  gqlPulse: {
+    clients: {
+      backendapi: {
+        endpoint: 'http://localhost:8319/api/graphql',
+      },
+    },
+  },
 });
