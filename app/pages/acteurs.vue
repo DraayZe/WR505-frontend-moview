@@ -1,104 +1,172 @@
 <script setup lang="ts">
-const { isAuthenticated, initAuth } = useAuth()
-const { getActors } = useActors()
-const router = useRouter()
+const query = `
+query{
+    actors{
+    totalCount
+        edges{
+            node{
+                id
+                firstname
+                lastname
+                dob
+                photo{
+                    id
+                }
+            }
+        }
+    }
+}
+`
 
-onMounted(() => {
-  initAuth()
-  loadProtectedData()
-})
-
-watchEffect(() => {
-  if (!isAuthenticated.value && import.meta.client) {
-    router.push('/login')
+type ActorsQuery = {
+  actors: {
+    totalCount: number
+    edges: {
+      node: {
+        id: string
+        firstname: string
+        lastname: string
+        dob: string
+        photo: {
+          id: string
+        }
+      }
+    }[]
   }
-})
-
-const data = ref<any>(null)
-const loading = ref(false)
-const error = ref<string | null>(null)
-
-const loadProtectedData = async () => {
-  loading.value = true
-  error.value = null
-
-  const result = await getActors()
-
-  if (result.success) {
-    data.value = result.data
-  } else {
-    error.value = result.error
-  }
-
-  loading.value = false
 }
 
-const getActorsList = (responseData: any) => {
-  if (!responseData) return []
-  if (responseData.member) return responseData.member
-  if (responseData['hydra:member']) return responseData['hydra:member']
-  if (Array.isArray(responseData)) return responseData
-  return []
+const { data } = await useAsyncGqlPulse<ActorsQuery>({
+  client: 'backendapi',
+  document: query,
+})
+
+const selectedDecade = ref<string | null>(null)
+const searchQuery = ref('')
+
+const getIdFromIri = (iri: string) => iri.split('/').pop()!
+
+const decades = computed(() => {
+  const result = []
+  for (let year = 1920; year < 2030; year += 10) {
+    result.push({
+      id: `${year}-${year + 10}`,
+      label: `${year} - ${year + 10}`
+    })
+  }
+  return result
+})
+
+const getDecade = (dob: string) => {
+  if (!dob) return null
+  const year = new Date(dob).getFullYear()
+  const decadeStart = Math.floor(year / 10) * 10
+  return `${decadeStart}-${decadeStart + 10}`
 }
+
+const filteredActors = computed(() => {
+  if (!data.value?.actors?.edges) return []
+
+  let actors = data.value.actors.edges
+
+  if (selectedDecade.value) {
+    actors = actors.filter(actor => getDecade(actor.node.dob) === selectedDecade.value)
+  }
+
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    actors = actors.filter(actor =>
+      actor.node.firstname.toLowerCase().includes(query) ||
+      actor.node.lastname.toLowerCase().includes(query)
+    )
+  }
+
+  return actors
+})
+
+const filteredActorsCount = computed(() => filteredActors.value.length)
+
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 </script>
 
+
 <template>
-  <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto">
-      <div class="mb-8">
-        <h1 class="text-4xl font-bold text-[#262620] mb-2">Acteurs</h1>
-        <p class="text-[#899878]">
-          {{ data?.totalItems || data?.['hydra:totalItems'] || '...' }} acteurs disponibles
-        </p>
-      </div>
+  <div class="relative min-h-screen flex">
 
-      <div v-if="error" class="mb-6 p-4 bg-red-100 border border-red-300 rounded text-red-700">
-        {{ error }}
-      </div>
+    <main class="flex-1 p-8 space-y-10 relative z-10">
+      <div class="flex">
+        <div class="flex flex-col w-2/3">
+          <h1 class="text-4xl font-bold text-gray-900 mb-2">
+            Catalogue des acteurs
+          </h1>
+          <p class="text-black/50">
+            Découvrez notre sélection d'acteurs.
+          </p>
+          <p class="text-black/50 mt-1">
+            {{ filteredActorsCount }} acteur{{ filteredActorsCount > 1 ? 's' : '' }} disponible{{ filteredActorsCount > 1 ? 's' : '' }}
+          </p>
+        </div>
+      <section>
+        <Select v-model="selectedDecade">
+          <SelectTrigger class="w-[250px] hover:cursor-pointer ">
+            <SelectValue placeholder="Toutes les décennies" class="text-black"/>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Décennie de naissance</SelectLabel>
+              <SelectItem :value="null" class="hover:cursor-pointer">
+                Toutes les décennies
+              </SelectItem>
+              <SelectItem v-for="decade in decades" :key="decade.id" :value="decade.id" class="hover:cursor-pointer">
+                {{ decade.label }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </section>  </div>
 
-      <div v-if="loading && !data" class="text-center py-20">
-        <p class="text-[#899878]">Chargement...</p>
-      </div>
+      <section>
+        <div class="relative">
+          <input v-model="searchQuery" type="text" placeholder="Rechercher un acteur..." class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 transition-all"/>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </section>
 
-      <div v-if="data && getActorsList(data).length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div
-            v-for="(actor, index) in getActorsList(data)"
-            :key="actor['@id'] || actor.id || index"
-            class="bg-white border border-[#899878]/20 rounded-lg overflow-hidden hover:border-[#899878] transition-colors"
-        >
-          <div class="h-48 bg-[#899878]/10 flex items-center justify-center">
-            <span class="text-[#899878]/40 text-5xl font-bold">
-              {{ (actor.firstname || actor.name || '?')[0].toUpperCase() }}{{ (actor.lastName || '')[0]?.toUpperCase() || '' }}
-            </span>
-          </div>
+      <section>
+        <h3 class="text-2xl font-bold mb-6 text-gray-900">
+          Catalogue
+        </h3>
+        <div v-if="filteredActors.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div v-for="actor in filteredActors" :key="actor.node.id" class="bg-white/80 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:cursor-pointer block">
+            <div class="h-40 bg-white rounded-t-xl flex items-center justify-center border-b border-black/50">
+            </div>
 
-          <div class="p-4">
-            <h3 class="text-lg font-semibold text-[#262620] mb-2 line-clamp-1">
-              {{ actor.firstname }} {{ actor.lastname }}
-            </h3>
+            <div class="p-4">
+              <p class="font-semibold text-gray-900 mb-2">
+                {{ actor.node.firstname }} {{ actor.node.lastname }}
+              </p>
 
-            <div class="flex flex-col gap-1 text-sm text-[#899878]">
-              <span v-if="actor.dob">
-                Né(e) le {{ actor.dob }}
-              </span>
-              <span v-if="actor.dod" class="font-medium">
-                Mort(e) le {{ actor.dod }}
-              </span>
-              <span v-if="actor.movies && Array.isArray(actor.movies)" class="text-xs mt-2">
-                {{ actor.movies.length }} film(s)
-              </span>
+              <p v-if="actor.node.dob" class="text-xs text-gray-600">
+                Né(e) en {{ new Date(actor.node.dob).getFullYear() }}
+              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="!loading && data && getActorsList(data).length === 0" class="text-center py-20">
-        <p class="text-[#899878]">Aucun acteur disponible</p>
-      </div>
-    </div>
+        <div v-else class="text-center py-20 text-gray-500">
+          Aucun acteur disponible
+        </div>
+      </section>
+
+    </main>
   </div>
 </template>
-
-<style scoped>
-
-</style>

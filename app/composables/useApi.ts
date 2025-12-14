@@ -9,7 +9,6 @@ export const useApi = () => {
       ...options.headers
     }
 
-    // Ajouter le token si disponible
     if (token.value) {
       headers['Authorization'] = `Bearer ${token.value}`
     }

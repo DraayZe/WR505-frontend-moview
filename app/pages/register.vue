@@ -3,6 +3,10 @@ const { createUser } = useUsers()
 const { isAuthenticated, login } = useAuth()
 const router = useRouter()
 
+definePageMeta({
+  layout: 'auth'
+})
+
 const form = reactive({
   email: '',
   password: '',
@@ -54,20 +58,16 @@ const handleRegister = async () => {
     password: form.password
   }
 
-  // Étape 1 : Créer l'utilisateur
   const createResult = await createUser(userData)
 
   if (createResult.success) {
     success.value = true
 
-    // Étape 2 : Connecter automatiquement l'utilisateur
     const loginResult = await login(form.email, form.password)
 
     if (loginResult.success) {
-      // Redirection immédiate vers la page d'accueil
       router.push('/')
     } else {
-      // Si la connexion échoue, rediriger vers la page de login
       error.value = 'Compte créé mais erreur de connexion. Veuillez vous connecter manuellement.'
       setTimeout(() => {
         router.push('/login')
@@ -82,77 +82,63 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center py-12 px-4">
-    <div class="max-w-md w-full">
-      <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-[#262620] mb-2">Inscription</h2>
-        <p class="text-[#899878]">Créez votre compte</p>
+  <div class="relative min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="fixed top-0 left-0 -z-10 h-full w-full bg-white">
+      <div class="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-[rgba(16,185,129,0.5)] opacity-50 blur-[80px]"></div>
+    </div>
+
+    <div class="max-w-md w-120 relative z-10">
+      <div class="mb-8">
+        <h2 class="text-4xl text-black mb-3">Veuillez vous inscrire</h2>
+        <p class="text-black/50">Entrez vos identifiants</p>
       </div>
 
-      <div class="bg-white border border-[#899878]/20 rounded-lg p-8">
+      <div class="">
         <form @submit.prevent="handleRegister" class="space-y-6">
           <div>
-            <label for="email" class="block text-sm font-medium text-[#262620] mb-2">
+            <label for="email" class="block text-sm text-black mb-2">
               Email *
             </label>
-            <input
-              id="email"
-              v-model="form.email"
-              type="email"
-              required
-              class="w-full px-4 py-3 bg-[#e4e6c3] border border-[#899878]/20 rounded text-[#262620] focus:outline-none focus:border-[#899878] transition-colors"
-            />
+            <input id="email" v-model="form.email" type="email" required class="w-full px-4 py-3 bg-white rounded-lg text-black border border-black" placeholder="votre@email.com"/>
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-medium text-[#262620] mb-2">
+            <label for="password" class="block text-sm text-black mb-2">
               Mot de passe * (min. 6 caractères)
             </label>
-            <input
-              id="password"
-              v-model="form.password"
-              type="password"
-              required
-              class="w-full px-4 py-3 bg-[#e4e6c3] border border-[#899878]/20 rounded text-[#262620] focus:outline-none focus:border-[#899878] transition-colors"
-            />
+            <input id="password" v-model="form.password" type="password" required class="w-full px-4 py-3 bg-white rounded-lg text-black border border-black" placeholder="••••••••"/>
           </div>
 
           <div>
-            <label for="confirmPassword" class="block text-sm font-medium text-[#262620] mb-2">
+            <label for="confirmPassword" class="block text-sm text-black mb-2">
               Confirmer le mot de passe *
             </label>
-            <input
-              id="confirmPassword"
-              v-model="form.confirmPassword"
-              type="password"
-              required
-              class="w-full px-4 py-3 bg-[#e4e6c3] border border-[#899878]/20 rounded text-[#262620] focus:outline-none focus:border-[#899878] transition-colors"
-            />
+            <input id="confirmPassword" v-model="form.confirmPassword" type="password" required class="w-full px-4 py-3 bg-white rounded-lg text-black border border-black" placeholder="••••••••"/>
           </div>
 
-          <div v-if="error" class="p-3 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
+          <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {{ error }}
           </div>
 
-          <div v-if="success" class="p-3 bg-green-100 border border-green-300 rounded text-green-700 text-sm">
+          <div v-if="success" class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm">
             Compte créé avec succès ! Connexion en cours...
           </div>
 
           <button
             type="submit"
             :disabled="loading || success"
-            class="w-full bg-[#899878] text-white hover:cursor-pointer font-medium py-3 rounded hover:bg-[#899878]/80 transition-colors disabled:opacity-50"
+            class="w-full bg-emerald-500 text-white hover:cursor-pointer py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {{ loading ? 'Création en cours...' : 'Créer mon compte' }}
           </button>
         </form>
 
         <div class="mt-6 text-center space-y-2">
-          <NuxtLink to="/login" class="block text-sm text-[#899878] hover:text-[#262620] transition-colors">
+          <NuxtLink to="/login" class="block text-sm text-emerald-500 hover:text-emerald-700 font-medium transition-colors">
             Déjà un compte ? Se connecter
           </NuxtLink>
-          <NuxtLink to="/" class="block text-sm text-[#899878] hover:text-[#262620] transition-colors">
-            ← Retour à l'accueil
+          <NuxtLink to="/" class="block text-sm text-gray-500 hover:text-gray-700 transition-colors">
+            Coninuer sans s'inscrire →
           </NuxtLink>
         </div>
       </div>

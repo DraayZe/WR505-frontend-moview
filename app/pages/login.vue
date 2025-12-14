@@ -2,6 +2,10 @@
 const { login, isAuthenticated } = useAuth()
 const router = useRouter()
 
+definePageMeta({
+  layout: 'auth'
+})
+
 const form = reactive({
   email: '',
   password: ''
@@ -34,57 +38,45 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center py-12 px-4">
-    <div class="max-w-md w-full">
-      <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-[#262620] mb-2">Connexion</h2>
-        <p class="text-[#899878]">Accédez à votre compte</p>
+  <div class="relative min-h-screen flex items-center justify-center">
+    <div class="fixed top-0 left-0 -z-10 h-full w-full bg-white">
+      <div class="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-[rgba(16,185,129,0.5)] opacity-50 blur-[80px]"></div>
+    </div>
+
+    <div class="max-w-md w-120 relative z-10">
+      <div class="mb-8">
+        <h2 class="text-4xl text-black mb-3">Veuillez vous connectez</h2>
+        <p class="text-black/50">Entrez vos identifiants</p>
       </div>
 
-      <div class="bg-white border border-[#899878]/20 rounded-lg p-8">
+      <div class="">
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div>
-            <label for="email" class="block text-sm font-medium text-[#262620] mb-2">
+            <label for="email" class="block text-sm text-gray-900 mb-2">
               Email
             </label>
-            <input
-              id="email"
-              v-model="form.email"
-              type="email"
-              required
-              class="w-full px-4 py-3 bg-[#e4e6c3] border border-[#899878]/20 rounded text-[#262620] focus:outline-none focus:border-[#899878] transition-colors"
-            />
+            <input id="email" v-model="form.email" type="email" required class="w-full px-4 py-3 bg-white rounded-lg text-black border border-black" placeholder="votre@email.com"/>
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-medium text-[#262620] mb-2">
+            <label for="password" class="block text-sm text-gray-900 mb-2">
               Mot de passe
             </label>
-            <input
-              id="password"
-              v-model="form.password"
-              type="password"
-              required
-              class="w-full px-4 py-3 bg-[#e4e6c3] border border-[#899878]/20 rounded text-[#262620] focus:outline-none focus:border-[#899878] transition-colors"
-            />
+            <input id="password" v-model="form.password" type="password" required class="w-full px-4 py-3 bg-white rounded-lg text-black border border-black" placeholder="••••••••"/>
           </div>
 
-          <div v-if="error" class="p-3 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
+          <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {{ error }}
           </div>
 
-          <button
-            type="submit"
-            :disabled="loading"
-            class="w-full bg-[#899878] text-white hover:cursor-pointer font-medium py-3 rounded hover:bg-[#899878]/80 transition-colors disabled:opacity-50"
-          >
+          <button type="submit" :disabled="loading" class="w-full bg-emerald-500 text-white hover:cursor-pointer py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
             {{ loading ? 'Connexion...' : 'Se connecter' }}
           </button>
         </form>
 
-        <div class="mt-6 text-center">
-          <NuxtLink to="/" class="text-sm text-[#899878] hover:text-[#262620] transition-colors">
-            ← Retour à l'accueil
+        <div class="mt-6 text-center space-y-2">
+          <NuxtLink to="/register" class="block text-sm text-emerald-500 hover:text-emerald-700 transition-colors">
+            Pas encore de compte ? S'inscrire
           </NuxtLink>
         </div>
       </div>
