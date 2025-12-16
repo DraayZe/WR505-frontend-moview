@@ -82,66 +82,120 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <div class="relative min-h-screen flex items-center justify-center py-12 px-4">
-    <div class="fixed top-0 left-0 -z-10 h-full w-full bg-white">
-      <div class="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-[rgba(16,185,129,0.5)] opacity-50 blur-[80px]"></div>
+  <div class="min-h-screen flex items-center justify-center bg-[#13151d] relative overflow-hidden">
+
+    <div class="absolute inset-0">
+      <div class="absolute top-[-200px] right-[-200px] w-[600px] h-[600px] bg-[#f43a00]/20 rounded-full blur-[120px]"></div>
+      <div class="absolute bottom-[-200px] left-[-200px] w-[600px] h-[600px] bg-[#252837]/80 rounded-full blur-[120px]"></div>
     </div>
 
-    <div class="max-w-md w-120 relative z-10">
-      <div class="mb-8">
-        <h2 class="text-4xl text-black mb-3">Veuillez vous inscrire</h2>
-        <p class="text-black/50">Entrez vos identifiants</p>
+    <div class="relative z-10 w-full max-w-md bg-[#1b1e29] border border-[#292d3e] rounded-2xl shadow-xl p-10">
+
+      <div class="mb-8 text-center">
+        <h2 class="text-5xl text-white font-display mb-3">
+          Créer un compte
+        </h2>
+        <p class="text-gray-400 font-body">
+          Rejoignez la communauté cinéma
+        </p>
       </div>
 
-      <div class="">
-        <form @submit.prevent="handleRegister" class="space-y-6">
-          <div>
-            <label for="email" class="block text-sm text-black mb-2">
-              Email *
-            </label>
-            <input id="email" v-model="form.email" type="email" required class="w-full px-4 py-3 bg-white rounded-lg text-black border border-black" placeholder="votre@email.com"/>
-          </div>
+      <form @submit.prevent="handleRegister" class="space-y-6">
 
-          <div>
-            <label for="password" class="block text-sm text-black mb-2">
-              Mot de passe * (min. 6 caractères)
-            </label>
-            <input id="password" v-model="form.password" type="password" required class="w-full px-4 py-3 bg-white rounded-lg text-black border border-black" placeholder="••••••••"/>
-          </div>
+        <div>
+          <label for="email" class="block text-sm text-gray-300 font-body mb-2">
+            Email *
+          </label>
+          <input
+              id="email"
+              v-model="form.email"
+              type="email"
+              required
+              placeholder="votre@email.com"
+              class="w-full px-4 py-3 bg-[#13151d] border border-[#292d3e]
+                   rounded-lg text-white font-body placeholder-gray-500
+                   focus:outline-none focus:border-[#f43a00]"
+          />
+        </div>
 
-          <div>
-            <label for="confirmPassword" class="block text-sm text-black mb-2">
-              Confirmer le mot de passe *
-            </label>
-            <input id="confirmPassword" v-model="form.confirmPassword" type="password" required class="w-full px-4 py-3 bg-white rounded-lg text-black border border-black" placeholder="••••••••"/>
-          </div>
+        <div>
+          <label for="password" class="block text-sm text-gray-300 font-body mb-2">
+            Mot de passe * (min. 6 caractères)
+          </label>
+          <input
+              id="password"
+              v-model="form.password"
+              type="password"
+              required
+              placeholder="••••••••"
+              class="w-full px-4 py-3 bg-[#13151d] border border-[#292d3e]
+                   rounded-lg text-white font-body placeholder-gray-500
+                   focus:outline-none focus:border-[#f43a00]"
+          />
+        </div>
 
-          <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {{ error }}
-          </div>
+        <div>
+          <label for="confirmPassword" class="block text-sm text-gray-300 font-body mb-2">
+            Confirmer le mot de passe *
+          </label>
+          <input
+              id="confirmPassword"
+              v-model="form.confirmPassword"
+              type="password"
+              required
+              placeholder="••••••••"
+              class="w-full px-4 py-3 bg-[#13151d] border border-[#292d3e]
+                   rounded-lg text-white font-body placeholder-gray-500
+                   focus:outline-none focus:border-[#f43a00]"
+          />
+        </div>
 
-          <div v-if="success" class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm">
-            Compte créé avec succès ! Connexion en cours...
-          </div>
+        <div
+            v-if="error"
+            class="p-4 bg-red-500/10 border border-red-500/30
+                 rounded-lg text-red-400 text-sm font-body"
+        >
+          {{ error }}
+        </div>
 
-          <button
+        <div
+            v-if="success"
+            class="p-4 bg-emerald-500/10 border border-emerald-500/30
+                 rounded-lg text-emerald-400 text-sm font-body"
+        >
+          Compte créé avec succès ! Connexion en cours...
+        </div>
+
+        <button
             type="submit"
             :disabled="loading || success"
-            class="w-full bg-emerald-500 text-white hover:cursor-pointer py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-          >
-            {{ loading ? 'Création en cours...' : 'Créer mon compte' }}
-          </button>
-        </form>
+            class="w-full py-3 rounded-lg font-body font-semibold text-white
+                 bg-gradient-to-r from-[#f43a00] to-[#b12f01]
+                 hover:opacity-90 transition hover:cursor-pointer
+                 disabled:opacity-50 disabled:cursor-not-allowed
+                 shadow-lg shadow-[#f43a00]/20"
+        >
+          {{ loading ? 'Création du compte...' : 'Créer mon compte' }}
+        </button>
 
-        <div class="mt-6 text-center space-y-2">
-          <NuxtLink to="/login" class="block text-sm text-emerald-500 hover:text-emerald-700 font-medium transition-colors">
-            Déjà un compte ? Se connecter
-          </NuxtLink>
-          <NuxtLink to="/" class="block text-sm text-gray-500 hover:text-gray-700 transition-colors">
-            Coninuer sans s'inscrire →
-          </NuxtLink>
-        </div>
+      </form>
+
+      <div class="mt-8 text-center space-y-2 text-sm">
+        <NuxtLink
+            to="/login"
+            class="block text-gray-400 font-body hover:text-[#f43a00] transition"
+        >
+          Déjà un compte ? Se connecter
+        </NuxtLink>
+        <NuxtLink
+            to="/"
+            class="block text-gray-500 font-body hover:text-gray-300 transition"
+        >
+          Continuer sans s’inscrire →
+        </NuxtLink>
       </div>
+
     </div>
   </div>
 </template>
+
