@@ -43,8 +43,6 @@ const { data } = await useAsyncGqlPulse<ActorsQuery>({
 const selectedDecade = ref<string | null>(null)
 const searchQuery = ref('')
 
-const getIdFromIri = (iri: string) => iri.split('/').pop()!
-
 const decades = computed(() => {
   const result = []
   for (let year = 1920; year < 2030; year += 10) {
@@ -172,7 +170,6 @@ import {
           <div
               v-for="actor in filteredActors"
               :key="actor.node.id"
-              :to="`/actors/${actor.node.id}`"
               class="relative group rounded-xl overflow-hidden"
           >
             <!-- Image avec dégradé -->
