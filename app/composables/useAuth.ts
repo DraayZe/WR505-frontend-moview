@@ -3,6 +3,27 @@ export const useAuth = () => {
   const token = useState<string | null>('auth_token', () => null)
   const user = useState<any>('auth_user', () => null)
 
+  const fetchUserProfile = async () => {
+    if (!token.value) return
+
+    try {
+      const userData = await $fetch(`${config.public.apiBase}/api/me`, {
+        headers: {
+          Authorization: `Bearer ${token.value}`
+        }
+      })
+
+      user.value = userData
+
+      if (import.meta.client) {
+        localStorage.setItem('auth_user', JSON.stringify(userData))
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération du profil:', error)
+      logout()
+    }
+  }
+
   const login = async (email: string, password: string) => {
     try {
       const response = await $fetch<{ token: string }>(`${config.public.apiBase}/auth`, {
@@ -14,12 +35,12 @@ export const useAuth = () => {
       })
 
       token.value = response.token
-      user.value = { email }
 
       if (import.meta.client) {
         localStorage.setItem('auth_token', response.token)
-        localStorage.setItem('auth_user', JSON.stringify({ email }))
       }
+
+      await fetchUserProfile()
 
       return { success: true, data: response }
     } catch (error: any) {
@@ -50,6 +71,7 @@ export const useAuth = () => {
 
       if (storedToken) {
         token.value = storedToken
+        fetchUserProfile()
       }
 
       if (storedUser) {
@@ -62,12 +84,17 @@ export const useAuth = () => {
     }
   }
 
+  const isAdmin = computed(() => {
+    return user.value?.roles?.includes('ROLE_ADMIN') || false
+  })
+
   return {
     token,
     user,
     login,
     logout,
     isAuthenticated,
+    isAdmin,
     initAuth
   }
 }
