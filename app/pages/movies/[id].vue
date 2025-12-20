@@ -88,6 +88,7 @@ console.log(reviews)
 const loadingReviews = ref(false)
 const showReviewForm = ref(false)
 
+
 const reviewForm = ref({
   rating: 0,
   comment: '',
@@ -254,12 +255,6 @@ const scrollToReviews = () => {
                   {{ data.movie.director.lastname }}
                 </p>
 
-                <span
-                    class="text-xs px-3 py-1 rounded-full
-                 bg-[#13151d] border border-[#292d3e] text-gray-400"
-                >
-          Crédit principal
-        </span>
               </div>
               <p v-else class="text-sm text-gray-500 italic font-body">
                 Aucun réalisateur renseigné
@@ -397,9 +392,6 @@ const scrollToReviews = () => {
                 <div>
                   <p class="text-white font-body">
                     {{ review.user?.email || 'Utilisateur' }}
-                  </p>
-                  <p class="text-xs text-gray-500">
-                    {{ formatDate(review.created) }}
                   </p>
                 </div>
               </div>

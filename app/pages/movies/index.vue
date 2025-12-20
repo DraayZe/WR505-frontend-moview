@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const query = `
 query {
-  movies {
+  movies(first: 500) {
     totalCount
     edges {
       node {
@@ -102,11 +102,12 @@ import {
 <template>
   <div class="min-h-screen bg-[#13151d]">
 
+    <!-- Section Header -->
     <section class="bg-gradient-to-br from-[#1b1e29] via-[#252837] to-[#1b1e29] border-b border-[#292d3e]">
       <div class="container mx-auto px-6 lg:px-12 py-40">
         <div class="max-w-3xl">
-          <h1 class="text-5xl text-white font-body mb-4">
-            Catalogue des films
+          <h1 class="text-5xl text-white font-display mb-4">
+            Catalogue de films
           </h1>
           <p class="text-gray-400 text-lg font-body mb-2">
             Explorez notre collection complète de films.
@@ -118,9 +119,9 @@ import {
       </div>
     </section>
 
+    <!-- Section Filters -->
     <section class="border-b border-[#292d3e]">
       <div class="container mx-auto px-6 lg:px-12 py-8 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
-
         <Select v-model="selectedCategory">
           <SelectTrigger class="w-full lg:w-[260px] bg-[#1b1e29] border border-[#292d3e] text-white hover:cursor-pointer hover:border-[#f43a00]">
             <SelectValue placeholder="Toutes les catégories" />
@@ -160,41 +161,36 @@ import {
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-
       </div>
     </section>
 
     <section>
       <div class="container mx-auto px-6 lg:px-12 py-16">
 
-        <div
-            v-if="filteredMovies.length"
-            class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8"
-        >
+        <div v-if="filteredMovies.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <NuxtLink
               v-for="movie in filteredMovies"
               :key="movie.node.id"
               :to="`/movies/${getIdFromIri(movie.node.id)}`"
-              class="group bg-[#1b1e29] border border-[#292d3e] rounded-xl overflow-hidden hover:border-[#f43a00] transition"
+              class="relative group rounded-xl overflow-hidden"
           >
-            <div class="relative aspect-[2/3] bg-[#252837] overflow-hidden">
+            <!-- Image avec dégradé -->
+            <div class="relative w-full h-76">
               <img
-                  src="/images/pulp-fiction.jpg"
+                  src="/images/oblivion.jpg"
                   alt="Poster du film"
-                  class="absolute inset-0 w-full h-full object-cover"
+                  class="w-full h-full object-cover"
               />
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent"></div>
             </div>
 
-            <div class="p-5">
-              <h3 class="text-white font-body font-semibold mb-2 group-hover:text-[#f43a00] transition">
+            <!-- Texte sur le dégradé (invisible par défaut, visible au survol) -->
+            <div class="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <h3 class="font-semibold text-lg text-[#f43a00]">
                 {{ movie.node.name }}
               </h3>
-              <p class="text-sm text-gray-400 line-clamp-2">
-                {{ movie.node.description || 'Aucune description disponible.' }}
-              </p>
             </div>
           </NuxtLink>
-
         </div>
 
         <div v-else class="text-center py-24 text-gray-500">
@@ -206,3 +202,4 @@ import {
 
   </div>
 </template>
+
