@@ -1,38 +1,74 @@
 <script setup lang="ts">
-const reviews = [
-  {
-    id: 1,
-    username: "CinePhil_88",
-    date: "Septembre 2023",
-    rating: "10/10",
-    content: "Un thriller psychologique intense. Denis Villeneuve maîtrise la tension de bout en bout. À voir absolument !",
-    active: false
-  },
-  {
-    id: 2,
-    username: "SarahConnor",
-    date: "Octobre 2023",
-    rating: "10/10",
-    content: "Perfection !! Je n'ai pas les mots pour décrire la performance de Hugh Jackman. Un scénario spectaculaire.",
-    active: false
-  },
-  {
-    id: 3,
-    username: "MovieMaster",
-    date: "Septembre 12th",
-    rating: "10/10",
-    content: "Quelle claque. J'étais investi dans les personnages dès les 20 premières minutes. Et cette fin... Wow.",
-    active: true // Cette carte sera mise en avant (couleur orange) comme sur ta capture
-  },
-  {
-    id: 4,
-    username: "Alex_Review",
-    date: "Septembre 2023",
-    rating: "09/10",
-    content: "Gripping! C'est comme ça qu'on commence un film. Des personnages profonds et une intrigue qui vous happe.",
-    active: false
+import { ref, onMounted } from 'vue'
+
+const reviewsApi = useReviews()
+const movie = ref<{ id: string; name: string; description: string } | null>(null)
+const reviews = ref<any[]>([])
+const loadingReviews = ref(false)
+
+const query = `
+query ($name: String) {
+  movies(name: $name) {
+    edges {
+      node {
+        id
+        name
+        description
+      }
+    }
   }
-];
+}
+`
+
+type MovieQuery = {
+  movies: {
+    edges: {
+      node: {
+        id: string
+        name: string
+        description: string
+      }
+    }[]
+  }
+}
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+onMounted(async () => {
+  const { data } = await useAsyncGqlPulse<MovieQuery>({
+    client: 'backendapi',
+    document: query,
+    variables: { name: 'Forrest Gump' }
+  })
+
+  // On récupère le premier résultat (le film Forrest Gump)
+  movie.value = data.value?.movies?.edges[0]?.node ?? null
+
+  // Charger les reviews si le film existe
+  if (movie.value?.id) {
+    loadingReviews.value = true
+    try {
+      const response: any = await reviewsApi.getMovieReviews(movie.value.id)
+      // Limiter aux 4 premières reviews
+      reviews.value = (response['member'] || response['hydra:member'] || []).slice(0, 4)
+    } catch (error) {
+      console.error('Erreur lors du chargement des reviews:', error)
+    } finally {
+      loadingReviews.value = false
+    }
+  }
+})
+
+
+const getIdFromIri = (iri: string) => iri.split('/').pop()!
+
 
 </script>
 
@@ -76,9 +112,6 @@ const reviews = [
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
         <div class="bg-[#1b1e29] border border-[#292d3e] rounded-xl p-8 hover:border-[#f43a00] transition">
-          <div class="text-[#f43a00] mb-4">
-            🎞️
-          </div>
           <h3 class="text-xl text-white font-body mb-3">
             Explorez des milliers de films
           </h3>
@@ -88,9 +121,6 @@ const reviews = [
         </div>
 
         <div class="bg-[#1b1e29] border border-[#292d3e] rounded-xl p-8 hover:border-[#f43a00] transition">
-          <div class="text-[#f43a00] mb-4">
-            ⭐
-          </div>
           <h3 class="text-xl text-white font-body mb-3">
             Donnez votre avis
           </h3>
@@ -100,9 +130,6 @@ const reviews = [
         </div>
 
         <div class="bg-[#1b1e29] border border-[#292d3e] rounded-xl p-8 hover:border-[#f43a00] transition">
-          <div class="text-[#f43a00] mb-4">
-            🎬
-          </div>
           <h3 class="text-xl text-white font-body mb-3">
             Découvrez les talents du cinéma
           </h3>
@@ -116,78 +143,83 @@ const reviews = [
   </div>
 
 
-  <div class="relative w-full h-[1000px] overflow-hidden group">
+  <div v-if="movie" class="relative w-full h-[1000px] overflow-hidden group">
     <div
         class="absolute inset-0 bg-cover bg-center"
-        style="background-image: url('/images/oblivion.jpg');"
+        style="background-image: url('/images/oblivion.jpg')";
     ></div>
 
     <div class="absolute inset-0 bg-gradient-to-t from-[#1b1e29] via-[#1b1e29]/60 to-transparent"></div>
 
     <div class="relative z-10 container mx-auto px-6 lg:px-12 h-full flex flex-col justify-end pb-20">
-      <h2 class="text-5xl lg:text-7xl font-bold text-white mb-4">Oblivion</h2>
-
-      <p class="text-gray-200 text-lg max-w-2xl mb-8 leading-relaxed shadow-black drop-shadow-md">
-        Lorsque la fille de Keller Dover et sa meilleure amie sont kidnappées, la panique s'installe.
-        L'inspecteur Loki arrête le seul suspect, mais doit le relâcher faute de preuves.
-        Jusqu'où irez-vous pour protéger votre famille ?
+      <h2 class="text-5xl lg:text-7xl font-bold text-white mb-4">{{ movie.name }}</h2>
+      <div>
+        <p class="text-gray-200 text-lg max-w-2xl mb-8 leading-relaxed shadow-black drop-shadow-md">
+        {{ movie.description }}
       </p>
-
-      <div class="flex gap-4">
-        <button class="px-8 py-3 bg-[#f43a00] text-white font-bold rounded hover:bg-[#b12f01] hover:cursor-pointer transition flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
-          Voir le film
-        </button>
-
+        <div class="flex items-center">
+          <NuxtLink class="px-8 py-3 bg-[#f43a00] text-white font-bold rounded hover:bg-[#b12f01] hover:cursor-pointer"
+                    :to="`/movies/${getIdFromIri(movie.id)}`">
+            Voir le film
+          </NuxtLink>
+        </div>
       </div>
     </div>
   </div>
 
+  <div v-else class="text-center py-24 text-gray-500">
+    Chargement du film...
+  </div>
+
   <div class="bg-[#1b1e29] py-20 relative">
     <div class="text-center mb-12">
-      <h2 class="text-3xl lg:text-4xl font-body text-white">Les avis d'Oblivion</h2>
+      <h2 class="text-3xl lg:text-4xl font-body text-white">
+        Les avis de {{ movie?.name || 'Forrest Gump' }}
+      </h2>
     </div>
 
     <div class="container mx-auto px-6 lg:px-12">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-        <div v-for="review in reviews" :key="review.id"
-             :class="[
-               'p-6 rounded-lg border flex flex-col h-full transition-transform hover:-translate-y-1',
-               review.active
-                 ? 'bg-[#f43a00] border-[#f43a00] text-white shadow-lg shadow-orange-500/20'
-                 : 'bg-transparent border-[#292d3e] text-gray-300 hover:border-gray-500'
-             ]">
-
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-full bg-gray-600 overflow-hidden">
-              <img :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.username}`" alt="avatar" />
-            </div>
-            <div>
-              <div class="font-bold text-sm" :class="review.active ? 'text-white' : 'text-white'">{{ review.username }}</div>
-              <div class="text-xs opacity-70">{{ review.date }}</div>
-            </div>
-          </div>
-
-          <div class="text-xl font-bold mb-3" :class="review.active ? 'text-white' : 'text-white'">
-            {{ review.rating }}
-          </div>
-
-          <p class="text-sm leading-relaxed mb-4 flex-grow" :class="review.active ? 'text-white/90' : 'text-gray-400'">
-            {{ review.content }}
-          </p>
-
-          <a href="#" class="text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:underline mt-auto">
-            Lire plus <span>→</span>
-          </a>
-        </div>
-
+      <div v-if="loadingReviews" class="text-center text-gray-400 font-body">
+        Chargement des avis...
       </div>
 
-      <div class="flex justify-center gap-2 mt-10">
-        <div class="w-2 h-2 rounded-full bg-gray-600"></div>
-        <div class="w-2 h-2 rounded-full bg-[#f43a00]"></div> <div class="w-2 h-2 rounded-full bg-gray-600"></div>
-        <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+      <div v-else-if="reviews.length === 0" class="text-center text-gray-400 font-body">
+        Aucun avis disponible pour ce film.
+      </div>
+
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div v-for="review in reviews" :key="review.id"
+             class="p-6 rounded-lg border flex flex-col h-full transition-transform hover:-translate-y-1 bg-transparent border-[#292d3e] text-gray-300 hover:border-gray-500">
+
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#f43a00] to-[#b12f01] flex items-center justify-center">
+              <span class="text-white font-body font-bold text-sm">
+                {{ review.user?.email?.[0]?.toUpperCase() || 'U' }}
+              </span>
+            </div>
+            <div>
+              <div class="font-bold text-sm text-white" >
+                {{ review.user?.email || 'Utilisateur' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1 mb-3">
+            <span
+                v-for="star in 5"
+                :key="star"
+                class="text-xl"
+                :class="star <= review.rating ? 'text-yellow-400' : 'text-gray-600'"
+            >
+              ★
+            </span>
+
+          </div>
+
+          <p class="text-sm leading-relaxed mb-4 flex-grow text-gray-400" >
+            {{ review.comment }}
+          </p>
+        </div>
       </div>
     </div>
   </div>

@@ -42,7 +42,7 @@ const handleLogin = async () => {
 
     <div class="absolute inset-0">
       <div class="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-[#f43a00]/20 rounded-full blur-[120px]"></div>
-      <div class="absolute bottom-[-200px] left-[-200px] w-[600px] h-[600px] bg-[#252837]/80 rounded-full blur-[120px]"></div>
+      <div class="absolute bottom-[-200px] right-[-200px] w-[600px] h-[600px] bg-[#252837]/80 rounded-full blur-[120px]"></div>
     </div>
 
     <div class="relative z-10 w-full max-w-md bg-[#1b1e29] border border-[#292d3e] rounded-2xl shadow-xl p-10">

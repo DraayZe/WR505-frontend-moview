@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const query = `
 query{
-  actors{
+  actors(first: 500) {
     totalCount
     edges{
       node{
@@ -42,8 +42,6 @@ const { data } = await useAsyncGqlPulse<ActorsQuery>({
 
 const selectedDecade = ref<string | null>(null)
 const searchQuery = ref('')
-
-const getIdFromIri = (iri: string) => iri.split('/').pop()!
 
 const decades = computed(() => {
   const result = []
@@ -98,13 +96,14 @@ import {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#13151d] ">
+  <div class="min-h-screen bg-[#13151d]">
 
+    <!-- Section Header -->
     <section class="bg-gradient-to-br from-[#1b1e29] via-[#252837] to-[#1b1e29] border-b border-[#292d3e]">
       <div class="container mx-auto px-6 lg:px-12 py-40">
         <div class="max-w-3xl">
-          <h1 class="text-5xl text-white font-body mb-4">
-            Catalogue des acteurs
+          <h1 class="text-5xl text-white font-display mb-4">
+            Catalogue d'acteurs
           </h1>
           <p class="text-gray-400 text-lg font-body mb-2">
             Découvrez les visages qui font vivre le cinéma.
@@ -116,6 +115,7 @@ import {
       </div>
     </section>
 
+    <!-- Section Filters -->
     <section class="border-b border-[#292d3e]">
       <div class="container mx-auto px-6 lg:px-12 py-8 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
 
@@ -162,33 +162,33 @@ import {
       </div>
     </section>
 
+    <!-- Section Actors -->
     <section>
       <div class="container mx-auto px-6 lg:px-12 py-16">
 
-        <div
-            v-if="filteredActors.length"
-            class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8"
-        >
-          <NuxtLink
+        <div v-if="filteredActors.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div
               v-for="actor in filteredActors"
               :key="actor.node.id"
-              :to="`/actors/${getIdFromIri(actor.node.id)}`"
-              class="group bg-[#1b1e29] border border-[#292d3e] rounded-xl overflow-hidden hover:border-[#f43a00] transition"
+              class="relative group rounded-xl overflow-hidden"
           >
-            <!-- Photo -->
-            <div class="h-56 bg-gradient-to-br from-[#252837] to-[#1b1e29] flex items-center justify-center text-gray-500 text-3xl">
-              👤
+            <!-- Image avec dégradé -->
+            <div class="relative h-72">
+              <img
+                  src="/images/brad-pitt.jpg"
+                  alt="Photo de l'acteur"
+                  class="w-full h-full object-cover"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent"></div>
             </div>
 
-            <div class="p-5">
-              <h3 class="text-white font-body font-semibold mb-1 group-hover:text-[#f43a00] transition">
+            <!-- Texte sur le dégradé (visible au survol) -->
+            <div class="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <h3 class="font-semibold text-lg text-[#f43a00]">
                 {{ actor.node.firstname }} {{ actor.node.lastname }}
               </h3>
-              <p v-if="actor.node.dob" class="text-sm text-gray-400">
-                Né(e) en {{ new Date(actor.node.dob).getFullYear() }}
-              </p>
             </div>
-          </NuxtLink>
+          </div>
         </div>
 
         <div v-else class="text-center py-24 text-gray-500">
