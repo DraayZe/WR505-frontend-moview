@@ -48,15 +48,13 @@ onMounted(async () => {
     variables: { name: 'Forrest Gump' }
   })
 
-  // On récupère le premier résultat (le film Forrest Gump)
+  // On récupère le film Forrest Gump
   movie.value = data.value?.movies?.edges[0]?.node ?? null
 
-  // Charger les reviews si le film existe
   if (movie.value?.id) {
     loadingReviews.value = true
     try {
       const response: any = await reviewsApi.getMovieReviews(movie.value.id)
-      // Limiter aux 4 premières reviews
       reviews.value = (response['member'] || response['hydra:member'] || []).slice(0, 4)
     } catch (error) {
       console.error('Erreur lors du chargement des reviews:', error)
