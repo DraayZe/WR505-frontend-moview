@@ -189,8 +189,6 @@ const submitActor = async () => {
   }
 }
 
-
-// --- GESTION RÉALISATEURS ---
 const directorForm = ref({
   id: null as string | null,
   firstname: '',
@@ -595,7 +593,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Petite animation d'entrée */
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }

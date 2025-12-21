@@ -32,7 +32,6 @@ export const useReviews = () => {
             throw new Error('Vous devez être connecté pour laisser un avis')
         }
 
-        // Récupérer l'IRI de l'utilisateur
         console.log('User data:', auth.user.value)
         const userId = auth.user.value?.['@id'] || auth.user.value?.id
 

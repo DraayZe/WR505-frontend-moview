@@ -1,0 +1,19 @@
+{
+  "users": {
+    "admin": {
+      "email": "admin@example.com",
+      "password": "admin123"
+    },
+    "user": {
+      "email": "user@example.com",
+      "password": "user123"
+    }
+  },
+  "movies": {
+    "forrestGump": {
+      "name": "Forrest Gump",
+      "description": "Un film emblématique de Robert Zemeckis",
+      "duration": 142
+    }
+  }
+}

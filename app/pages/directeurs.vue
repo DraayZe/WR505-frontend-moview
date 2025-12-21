@@ -58,12 +58,11 @@ const filteredDirectorsCount = computed(() => filteredDirectors.value.length)
 <template>
   <div class="min-h-screen bg-[#13151d]">
 
-    <!-- Section Header -->
     <section class="bg-gradient-to-br from-[#1b1e29] via-[#252837] to-[#1b1e29] border-b border-[#292d3e]">
       <div class="container mx-auto px-6 lg:px-12 py-40">
         <div class="max-w-3xl">
           <h1 class="text-5xl text-white font-display mb-4">
-            Réalisateurs
+            Catalogue de réalisateurs
           </h1>
           <p class="text-gray-400 text-lg font-body mb-2">
             Découvrez les talents qui façonnent le 7ᵉ art.
@@ -75,7 +74,6 @@ const filteredDirectorsCount = computed(() => filteredDirectors.value.length)
       </div>
     </section>
 
-    <!-- Section Filters -->
     <section class="border-b border-[#292d3e]">
       <div class="container mx-auto px-6 lg:px-12 py-8 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
         <div class="relative w-full lg:w-[400px]">
@@ -118,7 +116,6 @@ const filteredDirectorsCount = computed(() => filteredDirectors.value.length)
               <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent"></div>
             </div>
 
-            <!-- Texte sur le dégradé (visible au survol) -->
             <div class="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
               <h3 class="font-semibold text-lg text-[#f43a00]">
                 {{ director.node.firstname }} {{ director.node.lastname }}

@@ -324,7 +324,6 @@ const scrollToReviews = () => {
           </div>
 
           <form @submit.prevent="submitReview" class="space-y-4">
-            <!-- Système d'étoiles -->
             <div>
               <label class="block text-gray-300 font-body mb-2">Note</label>
               <div class="flex items-center gap-2">
@@ -346,7 +345,6 @@ const scrollToReviews = () => {
               </div>
             </div>
 
-            <!-- Commentaire -->
             <div>
               <label class="block text-gray-300 font-body mb-2">Commentaire</label>
               <textarea

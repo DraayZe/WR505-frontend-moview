@@ -212,12 +212,92 @@ http://localhost:8986/
 
 ### Utilisateur : user et mot de passe : password
 
-### Importer / choisir un fichier et c'est bons
+### Importer / choisir un fichier et c'est bon
 
-### Le projet est maintenant correctement installé et fonctionnel, lancez rpm run dev dans la partie front et vous pouvez utiliser le site web
+### Le projet est maintenant correctement installé et fonctionnel, lancez npm run dev dans la partie front et vous pouvez utiliser le site web
 
 ```bash
-rpm run dev 
+npm run dev
 ```
+
+## 🧪 Tests End-to-End avec Cypress
+
+Le projet est configuré avec Cypress pour les tests E2E (end-to-end).
+
+### Lancer les tests
+
+#### Mode interactif (avec interface graphique)
+```bash
+# Lance Cypress et ouvre l'interface graphique
+npm run cypress:open
+
+# Ou lance le serveur dev ET Cypress en une commande
+npm run test:e2e:open
+```
+
+#### Mode headless (en ligne de commande)
+```bash
+# Lance tous les tests en mode headless
+npm run cypress:run
+
+# Ou lance le serveur dev ET les tests automatiquement
+npm run test:e2e
+```
+
+### Tests disponibles
+
+Les tests E2E couvrent les fonctionnalités suivantes :
+
+1. **Homepage** (`cypress/e2e/homepage.cy.ts`)
+   - Vérification du chargement de la page d'accueil
+   - Vérification des sections de fonctionnalités
+   - Affichage des informations de Forrest Gump
+   - Navigation vers les pages
+
+2. **Films** (`cypress/e2e/movies.cy.ts`)
+   - Chargement du catalogue de films
+   - Filtrage et recherche de films
+   - Navigation vers les pages de détail
+   - Gestion des catégories
+
+3. **Réalisateurs** (`cypress/e2e/directors.cy.ts`)
+   - Chargement de la liste des réalisateurs
+   - Recherche de réalisateurs
+   - Affichage des informations
+
+4. **Authentification** (`cypress/e2e/authentication.cy.ts`)
+   - Connexion utilisateur
+   - Inscription
+   - Validation des formulaires
+   - Menu utilisateur
+
+5. **Administration** (`cypress/e2e/admin.cy.ts`)
+   - Accès réservé aux admins
+   - Navigation entre les onglets
+   - Formulaires de création/modification
+   - Gestion des films, acteurs et réalisateurs
+
+### Commandes personnalisées
+
+Le projet inclut une commande Cypress personnalisée pour faciliter les tests :
+
+```typescript
+// Connexion rapide
+cy.login('user@example.com', 'password123')
+```
+
+### Configuration
+
+La configuration Cypress se trouve dans `cypress.config.ts` :
+- Base URL : `http://localhost:3000`
+- Viewport : 1280x720
+- Screenshots lors des échecs
+- Vidéos désactivées par défaut
+
+### Fixtures
+
+Des données de test sont disponibles dans `cypress/fixtures/example.json` avec :
+- Comptes utilisateur (admin et user)
+- Données de films pour les tests
 
 

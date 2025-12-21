@@ -115,7 +115,6 @@ import {
       </div>
     </section>
 
-    <!-- Section Filters -->
     <section class="border-b border-[#292d3e]">
       <div class="container mx-auto px-6 lg:px-12 py-8 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
 
@@ -162,7 +161,6 @@ import {
       </div>
     </section>
 
-    <!-- Section Actors -->
     <section>
       <div class="container mx-auto px-6 lg:px-12 py-16">
 
@@ -172,7 +170,6 @@ import {
               :key="actor.node.id"
               class="relative group rounded-xl overflow-hidden"
           >
-            <!-- Image avec dégradé -->
             <div class="relative h-72">
               <img
                   src="/images/brad-pitt.jpg"
@@ -182,7 +179,6 @@ import {
               <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent"></div>
             </div>
 
-            <!-- Texte sur le dégradé (visible au survol) -->
             <div class="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
               <h3 class="font-semibold text-lg text-[#f43a00]">
                 {{ actor.node.firstname }} {{ actor.node.lastname }}
