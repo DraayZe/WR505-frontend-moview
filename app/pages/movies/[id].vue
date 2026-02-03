@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Star, Play, Clock, User, Film, ArrowLeft, MessageSquare, Send } from 'lucide-vue-next'
+
 const route = useRoute()
 const { isAuthenticated, user } = useAuth()
 const reviewsApi = useReviews()
@@ -37,7 +39,6 @@ query ($id: ID!) {
     }
   }
 }
-
 `
 
 type MovieQuery = {
@@ -45,7 +46,7 @@ type MovieQuery = {
     id: string
     name: string
     description: string
-    duration:integer
+    duration: number
 
     categories: {
       edges: {
@@ -74,7 +75,6 @@ type MovieQuery = {
   }
 }
 
-
 const { data, pending, error } = await useAsyncGqlPulse<MovieQuery>({
   client: 'backendapi',
   document: query,
@@ -84,10 +84,8 @@ const { data, pending, error } = await useAsyncGqlPulse<MovieQuery>({
 })
 
 const reviews = ref<any[]>([])
-console.log(reviews)
 const loadingReviews = ref(false)
 const showReviewForm = ref(false)
-
 
 const reviewForm = ref({
   rating: 0,
@@ -98,10 +96,10 @@ const hoverRating = ref(0)
 const submittingReview = ref(false)
 const reviewSuccess = ref(false)
 
-const loadReviews = async (movieIri: string) => {
+const loadReviews = async (movieIri?: string) => {
   loadingReviews.value = true
   try {
-    const response: any = await reviewsApi.getMovieReviews(movieIri)
+    const response: any = await reviewsApi.getMovieReviews(movieIri || data.value?.movie?.id)
     reviews.value = response['member'] || response['hydra:member'] || []
   } catch (error) {
     console.error('Erreur lors du chargement des reviews:', error)
@@ -109,7 +107,6 @@ const loadReviews = async (movieIri: string) => {
     loadingReviews.value = false
   }
 }
-
 
 const submitReview = async () => {
   if (!reviewForm.value.rating || !reviewForm.value.comment.trim()) {
@@ -145,15 +142,6 @@ const setRating = (rating: number) => {
   reviewForm.value.rating = rating
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
 const averageRating = computed(() => {
   if (reviews.value.length === 0) return 0
   const sum = reviews.value.reduce((acc, review) => acc + review.rating, 0)
@@ -172,248 +160,262 @@ const scrollToReviews = () => {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
-
 </script>
 
 <template>
-  <div class="bg-[#13151d]">
-    <section class="min-h-screen  relative overflow-hidden border-b border-[#292d3e]">
-      <div class="absolute inset-0 bg-cover bg-center"
-           style="background-image: url('/images/oblivion.jpg');">
-      </div>
-
-      <div class="absolute inset-0 bg-black/60"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-[#13151d] via-[#13151d]/70 to-transparent"></div>
-
-      <div class="relative z-10 container mx-auto px-6 lg:px-12 py-14 lg:py-20 min-h-screen flex flex-col">
-        <h1 v-if="data?.movie" class="text-4xl lg:text-7xl text-white font-body mb-8">
-          {{ data.movie.name }}
-        </h1>
-
-        <div class="mt-auto">
-          <div
-              v-if="data?.movie"
-              class="flex flex-row items-end justify-between gap-12"
+  <div class="min-h-screen bg-[#0a0a0c]">
+    <section v-if="data?.movie" class="relative min-h-screen overflow-hidden">
+      <div
+        class="absolute inset-0 bg-cover bg-center"
+        style="background-image: url('/images/oblivion.jpg');"
+      ></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-[#0a0a0c]/70 to-[#0a0a0c]/30"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-[#0a0a0c]/90 via-[#0a0a0c]/50 to-transparent"></div>
+      <div class="absolute inset-0 vignette"></div>
+      <div class="absolute inset-0 film-grain"></div>
+      <div class="relative z-10 container mx-auto px-6 lg:px-12 min-h-screen flex flex-col">
+        <div class="pt-28">
+          <NuxtLink
+            to="/movies"
+            class="inline-flex items-center gap-2 text-[#c0c0c0] hover:text-[#d4af37] transition-colors duration-300 font-body"
           >
-            <div class="flex flex-col gap-4 shrink-0">
-              <button
-                  v-if="isAuthenticated"
-                  @click="
-    showReviewForm = true;
-    scrollToReviews()
-  "
-                  class="px-7 py-4 rounded-lg font-body font-semibold text-white
-         bg-gradient-to-r from-[#f43a00] to-[#b12f01]
-         hover:opacity-90 hover:cursor-pointer transition shadow-lg shadow-[#f43a00]/20"
-              >
-                Donner un avis
-              </button>
-              <NuxtLink
-                  v-else
-                  to="/login"
-                  class="px-7 py-4 rounded-lg text-center font-body font-semibold text-white
-               bg-gradient-to-r from-[#f43a00] to-[#b12f01]
-               hover:opacity-90 hover:cursor-pointer transition shadow-lg shadow-[#f43a00]/20"
-              >
-                Connectez-vous pour donner un avis
-              </NuxtLink>
-              <div
-                  class="px-7 py-4 rounded-lg text-center font-body font-semibold
-               bg-[#1b1e29] border border-[#292d3e]
-               text-gray-200 hover:cursor-pointer hover:border-[#f43a00] transition"
-              >
-                Marqué comme vu
-              </div>
-              <NuxtLink
-                  to="/movies"
-                  class="px-7 py-4 rounded-lg text-center font-body font-semibold
-               bg-[#1b1e29] border border-[#292d3e]
-               text-gray-200 hover:cursor-pointer hover:border-[#f43a00] transition"
-              >
-                Voir d'autres films
-              </NuxtLink>
-            </div>
-
-            <div class="flex flex-col gap-4 flex-1">
-              <p class="text-gray-200/90 font-body leading-relaxed text-base lg:text-lg">
-                {{ data.movie.description || 'Aucune description disponible.' }}
-              </p>
-              <div class="flex flex-row gap-4">
-              <div v-if="data.movie.categories.edges.length"
-                  class="flex flex-wrap gap-2">
-        <span v-for="cat in data.movie.categories.edges" :key="cat.node.id"
-            class="text-xs font-body px-3 py-1 rounded-full
-                 bg-[#1b1e29] border border-[#292d3e] text-gray-200"
-        >
-          {{ cat.node.name }}
-        </span>
-              </div>
-
-              <div v-if="data.movie.director" class="flex items-center gap-3">
-                <p class="text-gray-200 font-body">
-                  {{ data.movie.director.firstname }}
-                  {{ data.movie.director.lastname }}
-                </p>
-
-              </div>
-              <p v-else class="text-sm text-gray-500 italic font-body">
-                Aucun réalisateur renseigné
-              </p>
-
-              <p class="text-white font-body">
-                {{ data.movie.duration }} min
-              </p>
-            </div>
-            </div>
-
-            <div
-                v-if="data.movie.actors.edges.length"
-                class="flex flex-row flex-wrap gap-3 shrink-0 max-w-xs"
-            >
-              <div
-                  v-for="actor in data.movie.actors.edges"
-                  :key="actor.node.id"
-                  class="bg-[#13151d] border border-[#292d3e]
-           rounded-xl px-3 py-2
-           hover:border-[#f43a00] transition"
-              >
-                <p class="text-white font-body whitespace-nowrap text-sm">
-                  {{ actor.node.firstname }} {{ actor.node.lastname }}
-                </p>
-              </div>
-            </div>
-
-          </div>
+            <ArrowLeft class="w-5 h-5" />
+            Retour au catalogue
+          </NuxtLink>
         </div>
 
-      </div>
-
-    </section>
-
-    <section v-if="data?.movie" class="container mx-auto mt-20 px-6 lg:px-12 pb-14" id="reviews">
-      <div class="bg-[#1b1e29] border border-[#292d3e] rounded-2xl p-8">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-2xl text-white font-body">
-              Avis des spectateurs
-            </h2>
-            <div v-if="reviews.length > 0" class="flex items-center gap-3 mt-2">
-              <div class="flex items-center gap-1">
+        <div class="flex-1 flex items-end pb-20">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 w-full">
+            <div class="lg:col-span-2">
+              <div class="flex flex-wrap gap-3 mb-6">
                 <span
-                    v-for="star in 5"
-                    :key="star"
-                    class="text-2xl"
-                    :class="star <= Math.round(parseFloat(averageRating)) ? 'text-[#f43a00]' : 'text-gray-600'"
+                  v-for="cat in data.movie.categories.edges"
+                  :key="cat.node.id"
+                  class="text-xs font-body px-3 py-2 rounded-xs bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/30"
                 >
-                  ★
+                  {{ cat.node.name }}
                 </span>
               </div>
-              <span class="text-gray-400 font-body">
-                {{ averageRating }}/5 · {{ reviews.length }} avis
-              </span>
+              <h1 class="font-display text-5xl lg:text-7xl text-white mb-6 leading-tight">
+                {{ data.movie.name }}
+              </h1>
+
+              <div class="flex flex-wrap items-center gap-6 mb-8">
+                <div v-if="reviews.length > 0" class="flex items-center gap-2">
+                  <div class="flex items-center gap-1">
+                    <Star
+                      v-for="star in 5"
+                      :key="star"
+                      class="w-5 h-5"
+                      :class="star <= Math.round(parseFloat(averageRating)) ? 'text-[#d4af37] fill-[#d4af37]' : 'text-[#d4af37]/30'"
+                    />
+                  </div>
+                  <span class="font-body text-white">{{ averageRating }}</span>
+                  <span class="font-body text-[#c0c0c0]">({{ reviews.length }} avis)</span>
+                </div>
+
+                <div v-if="data.movie.duration" class="flex items-center gap-2 text-[#c0c0c0]">
+                  <Clock class="w-5 h-5 text-[#d4af37]" />
+                  <span class="font-body">{{ data.movie.duration }} min</span>
+                </div>
+
+                <div v-if="data.movie.director" class="flex items-center gap-2 text-[#c0c0c0]">
+                  <User class="w-5 h-5 text-[#d4af37]" />
+                  <span class="font-body">{{ data.movie.director.firstname }} {{ data.movie.director.lastname }}</span>
+                </div>
+              </div>
+
+              <p class="font-body text-lg text-[#c0c0c0] leading-relaxed max-w-2xl mb-10">
+                {{ data.movie.description || 'Aucune description disponible.' }}
+              </p>
+
+              <div class="flex flex-wrap gap-4">
+                <button
+                  v-if="isAuthenticated"
+                  @click="showReviewForm = true; scrollToReviews()"
+                  class="hover:cursor-pointer group px-6 py-4 bg-gradient-to-r from-[#d4af37] to-[#a68a2a] text-[#0a0a0c] font-body font-semibold flex items-center gap-3 hover:brightness-110 transition-all duration-300"
+                >
+                  <MessageSquare class="w-5 h-5" />
+                  Donner un avis
+                </button>
+                <NuxtLink
+                  v-else
+                  to="/login"
+                  class="group px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#a68a2a] text-[#0a0a0c] font-body font-semibold flex items-center gap-3 hover:brightness-110 transition-all duration-300"
+                >
+                  <MessageSquare class="w-5 h-5" />
+                  Connectez-vous pour donner un avis
+                </NuxtLink>
+
+                <NuxtLink
+                  to="/movies"
+                  class="px-6 py-4 border border-[#d4af37]/40 text-[#d4af37] font-body font-medium hover:bg-[#d4af37]/10 hover:border-[#d4af37] transition-all duration-300 flex items-center gap-3"
+                >
+                  <Film class="w-5 h-5" />
+                  Voir d'autres films
+                </NuxtLink>
+              </div>
+            </div>
+
+            <div v-if="data.movie.actors.edges.length" class="lg:border-l lg:border-[#d4af37]/20 lg:pl-12">
+              <h3 class="font-display text-xl text-white mb-6">Distribution</h3>
+              <div class="space-y-4">
+                <div
+                  v-for="actor in data.movie.actors.edges.slice(0, 6)"
+                  :key="actor.node.id"
+                  class="flex items-center gap-4 group"
+                >
+                  <div>
+                    <p class="font-body text-white group-hover:text-[#d4af37] transition-colors duration-300">
+                      {{ actor.node.firstname }} {{ actor.node.lastname }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Formulaire de review -->
-        <div v-if="showReviewForm && isAuthenticated" class="mb-8 p-6 bg-[#13151d] border border-[#292d3e] rounded-xl">
-          <h3 class="text-lg text-white font-body mb-4">Votre avis</h3>
+      <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/30 to-transparent"></div>
+    </section>
 
-          <div v-if="reviewSuccess" class="mb-4 p-4 bg-green-900/20 border border-green-500 rounded-lg text-green-400">
-            Merci pour votre avis!
+    <section v-if="data?.movie" id="reviews" class="py-20 bg-[#0a0a0c]">
+      <div class="container mx-auto px-6 lg:px-12">
+        <div class="flex items-center justify-between mb-12">
+          <div>
+            <span class="text-[#d4af37] text-sm tracking-[0.3em] uppercase font-body mb-2 block">Témoignages</span>
+            <h2 class="font-display text-3xl lg:text-4xl text-white">
+              Avis des <span class="italic text-gold-gradient">spectateurs</span>
+            </h2>
+          </div>
+          <div v-if="reviews.length > 0" class="hidden md:flex items-center gap-3">
+            <div class="flex items-center gap-1">
+              <Star
+                v-for="star in 5"
+                :key="star"
+                class="w-6 h-6"
+                :class="star <= Math.round(parseFloat(averageRating)) ? 'text-[#d4af37] fill-[#d4af37]' : 'text-[#d4af37]/20'"
+              />
+            </div>
+            <span class="font-display text-2xl text-white">{{ averageRating }}</span>
+            <span class="font-body text-[#c0c0c0]">/ 5</span>
+          </div>
+        </div>
+
+        <!-- Review Form -->
+        <div
+          v-if="showReviewForm && isAuthenticated"
+          class="mb-12 p-8 bg-[#12121a] border border-[#d4af37]/20"
+        >
+          <h3 class="font-display text-xl text-white mb-6">Votre avis</h3>
+
+          <div v-if="reviewSuccess" class="mb-6 p-4 bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] font-body">
+            Merci pour votre avis !
           </div>
 
-          <form @submit.prevent="submitReview" class="space-y-4">
+          <form @submit.prevent="submitReview" class="space-y-6">
+            <!-- Rating -->
             <div>
-              <label class="block text-gray-300 font-body mb-2">Note</label>
-              <div class="flex items-center gap-2">
+              <label class="block text-[#c0c0c0] font-body mb-4">Note</label>
+              <div class="flex items-center gap-3">
                 <button
-                    v-for="star in 5"
-                    :key="star"
-                    type="button"
-                    @click="setRating(star)"
-                    @mouseenter="hoverRating = star"
-                    @mouseleave="hoverRating = 0"
-                    class="text-4xl transition hover:scale-110 focus:outline-none"
-                    :class="(hoverRating >= star || reviewForm.rating >= star) ? 'text-[#f43a00]' : 'text-gray-600'"
+                  v-for="star in 5"
+                  :key="star"
+                  type="button"
+                  @click="setRating(star)"
+                  @mouseenter="hoverRating = star"
+                  @mouseleave="hoverRating = 0"
+                  class="transition-transform hover:scale-110 focus:outline-none"
                 >
-                  ★
+                  <Star
+                    class="w-10 h-10 transition-colors duration-200"
+                    :class="(hoverRating >= star || reviewForm.rating >= star) ? 'text-[#d4af37] fill-[#d4af37]' : 'text-[#d4af37]/30'"
+                  />
                 </button>
-                <span v-if="reviewForm.rating > 0" class="ml-2 text-gray-400 font-body">
+                <span v-if="reviewForm.rating > 0" class="ml-4 text-[#c0c0c0] font-body">
                   {{ reviewForm.rating }}/5
                 </span>
               </div>
             </div>
 
+            <!-- Comment -->
             <div>
-              <label class="block text-gray-300 font-body mb-2">Commentaire</label>
+              <label class="block text-[#c0c0c0] font-body mb-4">Commentaire</label>
               <textarea
-                  v-model="reviewForm.comment"
-                  required
-                  rows="4"
-                  class="w-full px-4 py-3 bg-[#1b1e29] border border-[#292d3e] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#f43a00]"
-                  placeholder="Partagez votre avis sur ce film..."
+                v-model="reviewForm.comment"
+                required
+                rows="4"
+                class="w-full px-5 py-4 bg-[#0a0a0c] border border-[#d4af37]/20 text-white placeholder-[#c0c0c0]/40 font-body focus:outline-none focus:border-[#d4af37] transition-colors duration-300 resize-none"
+                placeholder="Partagez votre avis sur ce film..."
               ></textarea>
             </div>
 
+            <!-- Submit -->
             <button
-                type="submit"
-                :disabled="submittingReview || !reviewForm.rating"
-                class="w-full px-8 py-3 bg-gradient-to-r from-[#f43a00] to-[#b12f01] text-white rounded-lg font-body font-medium hover:opacity-90 transition disabled:opacity-50 hover:cursor-pointer"
+              type="submit"
+              :disabled="submittingReview || !reviewForm.rating"
+              class="px-8 py-4 bg-gradient-to-r from-[#d4af37] to-[#a68a2a] text-[#0a0a0c] font-body font-semibold flex items-center gap-3 hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <Send class="w-5 h-5" />
               {{ submittingReview ? 'Publication...' : 'Publier mon avis' }}
             </button>
           </form>
         </div>
 
-        <div v-if="loadingReviews" class="text-gray-400 font-body">
-          Chargement des avis...
+        <!-- Reviews list -->
+        <div v-if="loadingReviews" class="text-center py-12">
+          <div class="w-12 h-12 border-2 border-[#d4af37]/20 border-t-[#d4af37] rounded-full animate-spin mx-auto"></div>
         </div>
 
-        <div v-else-if="reviews.length === 0" class="text-center py-12">
-          <p class="text-gray-500 font-body">Aucun avis pour le moment. Soyez le premier à donner votre avis!</p>
+        <div v-else-if="reviews.length === 0" class="text-center py-16 border border-[#d4af37]/10 bg-[#12121a]">
+          <MessageSquare class="w-12 h-12 text-[#d4af37]/20 mx-auto mb-4" />
+          <p class="font-body text-[#c0c0c0]">Aucun avis pour le moment. Soyez le premier à donner votre avis !</p>
         </div>
 
-        <div v-else class="space-y-6">
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
-              v-for="review in reviews"
-              :key="review.id"
-              class="p-6 bg-[#13151d] border border-[#292d3e] rounded-xl hover:border-[#f43a00]/30 transition"
+            v-for="review in reviews"
+            :key="review.id"
+            class="group p-6 bg-[#12121a] border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300"
           >
-            <div class="flex items-start justify-between mb-3">
+            <!-- Header -->
+            <div class="flex items-start justify-between mb-4">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#f43a00] to-[#b12f01] flex items-center justify-center">
-                  <span class="text-white font-body font-bold">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4af37] to-[#a68a2a] flex items-center justify-center">
+                  <span class="text-[#0a0a0c] font-display font-bold">
                     {{ review.user?.email?.[0]?.toUpperCase() || 'U' }}
                   </span>
                 </div>
                 <div>
-                  <p class="text-white font-body">
-                    {{ review.user?.email || 'Utilisateur' }}
+                  <p class="font-body text-white">
+                    {{ review.user?.email?.split('@')[0] || 'Utilisateur' }}
                   </p>
+                  <p class="font-body text-xs text-[#c0c0c0]">Cinéphile vérifié</p>
                 </div>
               </div>
 
+              <!-- Rating -->
               <div class="flex items-center gap-1">
-                <span
-                    v-for="star in 5"
-                    :key="star"
-                    class="text-lg"
-                    :class="star <= review.rating ? 'text-[#f43a00]' : 'text-gray-600'"
-                >
-                  ★
-                </span>
+                <Star
+                  v-for="star in 5"
+                  :key="star"
+                  class="w-4 h-4"
+                  :class="star <= review.rating ? 'text-[#d4af37] fill-[#d4af37]' : 'text-[#d4af37]/20'"
+                />
               </div>
             </div>
 
-            <p class="text-gray-300 font-body leading-relaxed">
-              {{ review.comment }}
+            <!-- Comment -->
+            <p class="font-body text-[#c0c0c0] leading-relaxed">
+              "{{ review.comment }}"
             </p>
+
+            <!-- Decorative line -->
+            <div class="mt-6 h-px w-0 bg-gradient-to-r from-[#d4af37] to-transparent group-hover:w-full transition-all duration-500"></div>
           </div>
         </div>
       </div>
     </section>
-
   </div>
 </template>
-
