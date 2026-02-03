@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Settings, Film, Users, Clapperboard, BarChart3, Plus, Pencil, Trash2, X } from 'lucide-vue-next'
+
 definePageMeta({
   middleware: 'admin'
 })
@@ -12,10 +14,10 @@ const formatDateForInput = (dateString: string) => {
 }
 
 const formatDateDisplay = (dateString?: string | null) => {
-  if (!dateString) return ''
+  if (!dateString) return '—'
   const [date] = dateString.split('T')
   const [y, m, d] = date.split('-')
-  return `${d}-${m}-${y}`
+  return `${d}/${m}/${y}`
 }
 
 const stats = ref<any>(null)
@@ -71,13 +73,10 @@ const availableDirectors = ref<any[]>([])
 
 const loadDirectorsForMovies = async () => {
   try {
-    console.log('🎬 Loading directors for movies dropdown...')
     const directors = await admin.getDirectors()
-    console.log('✅ Directors loaded:', directors)
     availableDirectors.value = directors
-    console.log('📝 availableDirectors set to:', availableDirectors.value)
   } catch (e) {
-    console.error('❌ Erreur chargement directeurs:', e)
+    console.error('Erreur chargement directeurs:', e)
   }
 }
 
@@ -111,7 +110,7 @@ const deleteMovie = async (id: string) => {
   if (!confirm("Supprimer ce film définitivement ?")) return
   try {
     await admin.deleteMovie(id)
-    await loadTabData() // Rafraîchir la liste
+    await loadTabData()
   } catch (e) { console.error(e) }
 }
 
@@ -189,6 +188,7 @@ const submitActor = async () => {
   }
 }
 
+// --- GESTION REALISATEURS ---
 const directorForm = ref({
   id: null as string | null,
   firstname: '',
@@ -225,7 +225,7 @@ const submitDirector = async () => {
   try {
     const payload = {
       ...directorForm.value,
-      dod: directorForm.value.dod|| null,
+      dod: directorForm.value.dod || null,
     }
 
     if (payload.id) {
@@ -243,7 +243,12 @@ const submitDirector = async () => {
   }
 }
 
-console.log('availableDirectors:', availableDirectors.value)
+const tabs = [
+  { id: 'stats', label: 'Statistiques', icon: BarChart3 },
+  { id: 'movies', label: 'Films', icon: Film },
+  { id: 'actors', label: 'Acteurs', icon: Users },
+  { id: 'directors', label: 'Réalisateurs', icon: Clapperboard },
+]
 
 onMounted(() => {
   if (activeTab.value === 'stats') {
@@ -255,27 +260,42 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#13151d]">
-    <section class="bg-gradient-to-br from-[#1b1e29] via-[#252837] to-[#1b1e29] border-b border-[#292d3e]">
-      <div class="container mx-auto px-6 lg:px-12 py-20">
-        <h1 class="text-5xl text-white font-display mb-4">Administration</h1>
-        <p class="text-gray-400 text-lg font-body">
-          Gérez les films, acteurs et réalisateurs de la plateforme
+  <div class="min-h-screen bg-[#0a0a0c]">
+    <section class="relative pt-32 pb-12 overflow-hidden">
+      <div class="absolute inset-0">
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-[#d4af37]/5 rounded-full blur-3xl"></div>
+      </div>
+
+      <div class="relative z-10 container mx-auto px-6 lg:px-12">
+        <div class="flex items-center gap-4 mb-6">
+          <Settings class="w-6 h-6 text-[#d4af37]" />
+          <span class="text-[#d4af37] text-sm tracking-[0.3em] uppercase font-body">Panneau de contrôle</span>
+        </div>
+        <h1 class="font-display text-5xl lg:text-6xl text-white mb-4">
+          Administration
+        </h1>
+        <p class="font-body text-[#c0c0c0] text-lg">
+          Gérez les films, acteurs et réalisateurs de la plateforme.
         </p>
       </div>
     </section>
 
-    <section class="border-b border-[#292d3e] sticky top-0 z-10 bg-[#13151d]/95 backdrop-blur">
+    <section class="border-y border-[#d4af37]/10 bg-[#0a0a0c]/95 backdrop-blur-sm sticky top-[72px] z-40">
       <div class="container mx-auto px-6 lg:px-12">
-        <div class="flex gap-8 overflow-x-auto">
+        <div class="flex gap-2 overflow-x-auto py-4">
           <button
-              v-for="tab in ['stats', 'movies', 'actors', 'directors']"
-              :key="tab"
-              @click="activeTab = tab"
-              class="py-4 px-2 font-body font-medium border-b-2 transition whitespace-nowrap hover:cursor-pointer capitalize"
-              :class="activeTab === tab ? 'text-[#f43a00] border-[#f43a00]' : 'text-gray-400 border-transparent hover:text-white'"
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            :class="[
+              'hover:cursor-pointer flex items-center gap-2 px-6 py-3 font-body font-medium transition-all duration-300 whitespace-nowrap',
+              activeTab === tab.id
+                ? 'bg-[#d4af37] text-[#0a0a0c]'
+                : 'text-[#c0c0c0] hover:text-white border border-[#d4af37]/20 hover:border-[#d4af37]/40'
+            ]"
           >
-            {{ tab === 'stats' ? 'Statistiques' : (tab === 'movies' ? 'Films' : (tab === 'actors' ? 'Acteurs' : 'Réalisateurs')) }}
+            <component :is="tab.icon" class="w-4 h-4" />
+            {{ tab.label }}
           </button>
         </div>
       </div>
@@ -283,40 +303,52 @@ onMounted(() => {
 
     <section class="py-12">
       <div class="container mx-auto px-6 lg:px-12">
+        <div v-if="activeTab === 'stats'" class="animate-fade-in">
+          <h2 class="font-display text-3xl text-white mb-8">Statistiques <span class="italic text-gold-gradient">globales</span></h2>
 
-        <div v-if="activeTab === 'stats'" class="max-w-4xl animate-fade-in">
-          <h2 class="text-3xl text-white font-body mb-8">Statistiques globales</h2>
-          <div v-if="loadingStats" class="text-gray-400">Chargement...</div>
-          <div v-else-if="stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-[#1b1e29] border border-[#292d3e] rounded-xl p-8 hover:border-[#f43a00] transition group">
-              <div class="text-[#f43a00] text-4xl font-bold mb-2 group-hover:scale-110 transition-transform origin-left">
+          <div v-if="loadingStats" class="flex items-center justify-center py-12">
+            <div class="w-10 h-10 border-2 border-[#d4af37]/20 border-t-[#d4af37] rounded-full animate-spin"></div>
+          </div>
+
+          <div v-else-if="stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div class="group p-8 bg-[#12121a] border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300">
+              <Film class="w-8 h-8 text-[#d4af37] mb-4" />
+              <div class="font-display text-4xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">
                 {{ stats.movies?.totalCount || 0 }}
               </div>
-              <div class="text-gray-400 font-body">Films</div>
+              <div class="font-body text-[#c0c0c0]">Films</div>
             </div>
-            <div class="bg-[#1b1e29] border border-[#292d3e] rounded-xl p-8 hover:border-[#f43a00] transition group">
-              <div class="text-[#f43a00] text-4xl font-bold mb-2 group-hover:scale-110 transition-transform origin-left">
+
+            <div class="group p-8 bg-[#12121a] border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300">
+              <Users class="w-8 h-8 text-[#d4af37] mb-4" />
+              <div class="font-display text-4xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">
                 {{ stats.actors?.totalCount || 0 }}
               </div>
-              <div class="text-gray-400 font-body">Acteurs</div>
+              <div class="font-body text-[#c0c0c0]">Acteurs</div>
             </div>
-            <div class="bg-[#1b1e29] border border-[#292d3e] rounded-xl p-8 hover:border-[#f43a00] transition group">
-              <div class="text-[#f43a00] text-4xl font-bold mb-2 group-hover:scale-110 transition-transform origin-left">
+
+            <div class="group p-8 bg-[#12121a] border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300">
+              <Clapperboard class="w-8 h-8 text-[#d4af37] mb-4" />
+              <div class="font-display text-4xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">
                 {{ stats.directors?.totalCount || 0 }}
               </div>
-              <div class="text-gray-400 font-body">Réalisateurs</div>
+              <div class="font-body text-[#c0c0c0]">Réalisateurs</div>
             </div>
-            <div class="bg-[#1b1e29] border border-[#292d3e] rounded-xl p-8 hover:border-[#f43a00] transition group">
-              <div class="text-[#f43a00] text-4xl font-bold mb-2 group-hover:scale-110 transition-transform origin-left">
+
+            <div class="group p-8 bg-[#12121a] border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300">
+              <BarChart3 class="w-8 h-8 text-[#d4af37] mb-4" />
+              <div class="font-display text-4xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">
                 {{ stats.categories?.totalCount || 0 }}
               </div>
-              <div class="text-gray-400 font-body">Catégories</div>
+              <div class="font-body text-[#c0c0c0]">Catégories</div>
             </div>
-            <div class="bg-[#1b1e29] border border-[#292d3e] rounded-xl p-8 hover:border-[#f43a00] transition group">
-              <div class="text-[#f43a00] text-4xl font-bold mb-2 group-hover:scale-110 transition-transform origin-left">
+
+            <div class="group p-8 bg-[#12121a] border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300">
+              <Settings class="w-8 h-8 text-[#d4af37] mb-4" />
+              <div class="font-display text-4xl text-white mb-2 group-hover:text-[#d4af37] transition-colors">
                 {{ stats.reviews?.totalCount || 0 }}
               </div>
-              <div class="text-gray-400 font-body">Reviews</div>
+              <div class="font-body text-[#c0c0c0]">Avis</div>
             </div>
           </div>
         </div>
@@ -324,99 +356,94 @@ onMounted(() => {
         <div v-if="activeTab === 'movies'" class="animate-fade-in">
           <div class="flex flex-col xl:flex-row gap-8">
             <div class="xl:w-2/3 order-2 xl:order-1">
-              <h2 class="text-2xl text-white mb-4">Liste des films</h2>
-              <div class="bg-[#1b1e29] border border-[#292d3e] rounded-lg overflow-hidden">
-                <table class="w-full text-left text-gray-400">
-                  <thead class="bg-[#252837] text-white uppercase text-xs">
-                  <tr>
-                    <th class="px-6 py-4">Titre</th>
-                    <th class="px-6 py-4 hidden md:table-cell">Date de sortie</th>
-                    <th class="px-6 py-4 hidden md:table-cell">Durée</th>
-                    <th class="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                  </thead>
-                  <tbody class="divide-y divide-[#292d3e]">
-                  <tr v-for="movie in moviesList" :key="movie.id" class="hover:bg-[#252837] transition">
-                    <td class="px-6 py-4 font-medium text-white">{{ movie.name }}</td>
-                    <td class="px-6 py-4 hidden md:table-cell">{{ formatDateDisplay(movie.releaseData) }}</td>
-                    <td class="px-6 py-4 hidden md:table-cell">{{ movie.duration }} min</td>
-                    <td class="px-6 py-4 text-right space-x-4">
-                      <button @click="editMovie(movie)" class="hover:cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
-                          <path fill="gray" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                        </svg>
-                      </button>
-                      <button @click="deleteMovie(movie.id)" class="hover:cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                             fill="none" stroke="#e60000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <path d="M3 6h18"/>
-                          <path d="M8 6V4h8v2"/>
-                          <path d="M6 6l1 16h10l1-16"/>
-                          <path d="M10 11v7"/>
-                          <path d="M14 11v7"/>
-                        </svg>
+              <h2 class="font-display text-2xl text-white mb-6">Liste des <span class="italic text-gold-gradient">films</span></h2>
 
-                      </button>
-                    </td>
-                  </tr>
-                  <tr v-if="moviesList.length === 0">
-                    <td colspan="4" class="px-6 py-8 text-center text-gray-500">Aucun film trouvé.</td>
-                  </tr>
+              <div class="bg-[#12121a] border border-[#d4af37]/10 overflow-hidden">
+                <table class="w-full text-left">
+                  <thead class="bg-[#0a0a0c] border-b border-[#d4af37]/10">
+                    <tr>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider">Titre</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider hidden md:table-cell">Date</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider hidden md:table-cell">Durée</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[#d4af37]/10">
+                    <tr v-for="movie in moviesList" :key="movie.id" class="hover:bg-[#d4af37]/5 transition-colors">
+                      <td class="px-6 py-4 font-body text-white">{{ movie.name }}</td>
+                      <td class="px-6 py-4 font-body text-[#c0c0c0] hidden md:table-cell">{{ formatDateDisplay(movie.releaseData) }}</td>
+                      <td class="px-6 py-4 font-body text-[#c0c0c0] hidden md:table-cell">{{ movie.duration }} min</td>
+                      <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                          <button @click="editMovie(movie)" class="hover:cursor-pointer p-2 text-[#c0c0c0] hover:text-[#d4af37] transition-colors">
+                            <Pencil class="w-4 h-4" />
+                          </button>
+                          <button @click="deleteMovie(movie.id)" class="hover:cursor-pointer p-2 text-[#c0c0c0] hover:text-red-500 transition-colors">
+                            <Trash2 class="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr v-if="moviesList.length === 0">
+                      <td colspan="4" class="px-6 py-12 text-center text-[#c0c0c0] font-body">Aucun film trouvé.</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div class="xl:w-1/3 order-1 xl:order-2 mt-12">
-              <div class="sticky top-24 bg-[#1b1e29] border border-[#292d3e] rounded-xl p-6 shadow-xl">
-                <div class="flex justify-between items-center mb-6 border-b border-[#292d3e] pb-4">
-                  <h3 class="text-xl text-white font-bold">
-                    {{ movieForm.id ? 'Modifier le film' : 'Ajouter un film' }}
+            <div class="xl:w-1/3 order-1 xl:order-2">
+              <div class="sticky top-36 bg-[#12121a] border border-[#d4af37]/10 p-6">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#d4af37]/10">
+                  <h3 class="font-display text-xl text-white flex items-center gap-2">
+                    <Plus v-if="!movieForm.id" class="w-5 h-5 text-[#d4af37]" />
+                    <Pencil v-else class="w-5 h-5 text-[#d4af37]" />
+                    {{ movieForm.id ? 'Modifier' : 'Ajouter' }} un film
                   </h3>
-                  <button v-if="movieForm.id" @click="resetMovieForm" class="text-xs text-gray-400 hover:text-white hover:cursor-pointer uppercase tracking-wider">
-                    Annuler
+                  <button v-if="movieForm.id" @click="resetMovieForm" class="p-2 text-[#c0c0c0] hover:text-white transition-colors">
+                    <X class="w-5 h-5" />
                   </button>
                 </div>
 
                 <form @submit.prevent="submitMovie" class="space-y-4">
                   <div>
-                    <label class="block text-gray-400 text-xs uppercase tracking-wide mb-1">Titre</label>
-                    <input v-model="movieForm.name" type="text" required class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none transition" />
+                    <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Titre</label>
+                    <input v-model="movieForm.name" type="text" required class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                   </div>
                   <div>
-                    <label class="block text-gray-400 text-xs uppercase tracking-wide mb-1">Description</label>
-                    <textarea v-model="movieForm.description" rows="3" required class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none transition"></textarea>
+                    <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Description</label>
+                    <textarea v-model="movieForm.description" rows="3" required class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors resize-none"></textarea>
                   </div>
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase tracking-wide mb-1">Date sortie</label>
-                      <input v-model="movieForm.releaseData" type="date" required class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none transition" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Date sortie</label>
+                      <input v-model="movieForm.releaseData" type="date" required class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase tracking-wide mb-1">Durée (min)</label>
-                      <input v-model.number="movieForm.duration" type="number" required class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none transition" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Durée (min)</label>
+                      <input v-model.number="movieForm.duration" type="number" required class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                   </div>
                   <div>
-                    <label class="block text-gray-400 text-xs uppercase tracking-wide mb-1">Réalisateur</label>
-                    <select v-model="movieForm.director" class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none transition">
+                    <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Réalisateur</label>
+                    <select v-model="movieForm.director" class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors">
                       <option :value="null">Aucun réalisateur</option>
-                      <option v-for="director in availableDirectors" :key="director.id" :value="director.id" class="text-white">
+                      <option v-for="director in availableDirectors" :key="director.id" :value="director.id">
                         {{ director.firstname }} {{ director.lastname }}
                       </option>
                     </select>
                   </div>
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase tracking-wide mb-1">Nombre d'entrées</label>
-                      <input v-model.number="movieForm.nbEntries" type="number" min="0" class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none transition" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Entrées</label>
+                      <input v-model.number="movieForm.nbEntries" type="number" min="0" class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase tracking-wide mb-1">Budget (€)</label>
-                      <input v-model.number="movieForm.budget" type="number" min="0" step="0.01" class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none transition" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Budget (€)</label>
+                      <input v-model.number="movieForm.budget" type="number" min="0" class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                   </div>
-                  <button type="submit" :disabled="submittingMovie" class="w-full py-3 mt-2 bg-gradient-to-r from-[#f43a00] to-[#b12f01] hover:cursor-pointer hover:opacity-90 text-white rounded font-medium transition disabled:opacity-50">
+                  <button type="submit" :disabled="submittingMovie" class="hover:cursor-pointer w-full py-4 mt-4 bg-gradient-to-r from-[#d4af37] to-[#a68a2a] text-[#0a0a0c] font-body font-semibold hover:brightness-110 transition-all duration-300 disabled:opacity-50">
                     {{ submittingMovie ? 'Sauvegarde...' : (movieForm.id ? 'Mettre à jour' : 'Créer le film') }}
                   </button>
                 </form>
@@ -428,79 +455,81 @@ onMounted(() => {
         <div v-if="activeTab === 'actors'" class="animate-fade-in">
           <div class="flex flex-col xl:flex-row gap-8">
             <div class="xl:w-2/3 order-2 xl:order-1">
-              <h2 class="text-2xl text-white mb-4">Liste des acteurs</h2>
-              <div class="bg-[#1b1e29] border border-[#292d3e] rounded-lg overflow-hidden">
-                <table class="w-full text-left text-gray-400">
-                  <thead class="bg-[#252837] text-white uppercase text-xs">
-                  <tr>
-                    <th class="px-6 py-4">Nom</th>
-                    <th class="px-6 py-4">Prénom</th>
-                    <th class="px-6 py-4 hidden md:table-cell">Naissance</th>
-                    <th class="px-6 py-4 hidden md:table-cell">Decès</th>
-                    <th class="px-6 py-4 text-right">Actions</th>
-                  </tr>
+              <h2 class="font-display text-2xl text-white mb-6">Liste des <span class="italic text-gold-gradient">acteurs</span></h2>
+
+              <div class="bg-[#12121a] border border-[#d4af37]/10 overflow-hidden">
+                <table class="w-full text-left">
+                  <thead class="bg-[#0a0a0c] border-b border-[#d4af37]/10">
+                    <tr>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider">Nom</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider">Prénom</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider hidden md:table-cell">Naissance</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider text-right">Actions</th>
+                    </tr>
                   </thead>
-                  <tbody class="divide-y divide-[#292d3e]">
-                  <tr v-for="actor in actorsList" :key="actor.id" class="hover:bg-[#252837] transition">
-                    <td class="px-6 py-4 font-medium text-white">{{ actor.lastname }}</td>
-                    <td class="px-6 py-4">{{ actor.firstname }}</td>
-                    <td class="px-6 py-4 hidden md:table-cell">{{ formatDateDisplay(actor.dob) }}</td>
-                    <td class="px-6 py-4 hidden md:table-cell">{{ formatDateDisplay(actor.dod) }}</td>
-                    <td class="px-6 py-4 text-right space-x-4">
-                      <button @click="editActor(actor)" class="hover:cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
-                          <path fill="gray" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                        </svg>
-                      </button>
-                      <button @click="deleteActor(actor.id)" class="hover:cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="#e60000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M3 6h18"/>
-                        <path d="M8 6V4h8v2"/>
-                        <path d="M6 6l1 16h10l1-16"/>
-                        <path d="M10 11v7"/>
-                        <path d="M14 11v7"/>
-                      </svg>
-                      </button>
-                    </td>
-                  </tr>
+                  <tbody class="divide-y divide-[#d4af37]/10">
+                    <tr v-for="actor in actorsList" :key="actor.id" class="hover:bg-[#d4af37]/5 transition-colors">
+                      <td class="px-6 py-4 font-body text-white">{{ actor.lastname }}</td>
+                      <td class="px-6 py-4 font-body text-[#c0c0c0]">{{ actor.firstname }}</td>
+                      <td class="px-6 py-4 font-body text-[#c0c0c0] hidden md:table-cell">{{ formatDateDisplay(actor.dob) }}</td>
+                      <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                          <button @click="editActor(actor)" class="hover:cursor-pointer p-2 text-[#c0c0c0] hover:text-[#d4af37] transition-colors">
+                            <Pencil class="w-4 h-4" />
+                          </button>
+                          <button @click="deleteActor(actor.id)" class="hover:cursor-pointer p-2 text-[#c0c0c0] hover:text-red-500 transition-colors">
+                            <Trash2 class="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr v-if="actorsList.length === 0">
+                      <td colspan="4" class="px-6 py-12 text-center text-[#c0c0c0] font-body">Aucun acteur trouvé.</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div class="xl:w-1/3 order-1 xl:order-2 mt-12">
-              <div class="sticky top-24 bg-[#1b1e29] border border-[#292d3e] rounded-xl p-6 shadow-xl">
-                <div class="flex justify-between items-center mb-6 border-b border-[#292d3e] pb-4">
-                  <h3 class="text-xl text-white font-bold">{{ actorForm.id ? 'Modifier' : 'Ajouter' }} un acteur</h3>
-                  <button v-if="actorForm.id" @click="resetActorForm" class="text-xs text-gray-400 hover:text-white hover:cursor-pointer uppercase tracking-wider">Annuler</button>
+            <div class="xl:w-1/3 order-1 xl:order-2">
+              <div class="sticky top-36 bg-[#12121a] border border-[#d4af37]/10 p-6">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#d4af37]/10">
+                  <h3 class="font-display text-xl text-white flex items-center gap-2">
+                    <Plus v-if="!actorForm.id" class="w-5 h-5 text-[#d4af37]" />
+                    <Pencil v-else class="w-5 h-5 text-[#d4af37]" />
+                    {{ actorForm.id ? 'Modifier' : 'Ajouter' }} un acteur
+                  </h3>
+                  <button v-if="actorForm.id" @click="resetActorForm" class="p-2 text-[#c0c0c0] hover:text-white transition-colors">
+                    <X class="w-5 h-5" />
+                  </button>
                 </div>
+
                 <form @submit.prevent="submitActor" class="space-y-4">
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase mb-1">Prénom</label>
-                      <input v-model="actorForm.firstname" required class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Prénom</label>
+                      <input v-model="actorForm.firstname" required class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase mb-1">Nom</label>
-                      <input v-model="actorForm.lastname" required class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Nom</label>
+                      <input v-model="actorForm.lastname" required class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                   </div>
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase mb-1">Naissance</label>
-                      <input v-model="actorForm.dob" type="date" class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Naissance</label>
+                      <input v-model="actorForm.dob" type="date" class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase mb-1">Décès</label>
-                      <input v-model="actorForm.dod" type="date" class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Décès</label>
+                      <input v-model="actorForm.dod" type="date" class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                   </div>
                   <div>
-                    <label class="block text-gray-400 text-xs uppercase mb-1">Biographie</label>
-                    <textarea v-model="actorForm.bio" rows="3" class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none"></textarea>
+                    <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Biographie</label>
+                    <textarea v-model="actorForm.bio" rows="3" class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors resize-none"></textarea>
                   </div>
-                  <button type="submit" :disabled="submittingActor" class="w-full py-3 mt-2 bg-gradient-to-r from-[#f43a00] to-[#b12f01] hover:opacity-90 hover:cursor-pointer text-white rounded font-medium transition disabled:opacity-50">
+                  <button type="submit" :disabled="submittingActor" class="hover:cursor-pointer w-full py-4 mt-4 bg-gradient-to-r from-[#d4af37] to-[#a68a2a] text-[#0a0a0c] font-body font-semibold hover:brightness-110 transition-all duration-300 disabled:opacity-50">
                     {{ submittingActor ? 'Sauvegarde...' : (actorForm.id ? 'Mettre à jour' : 'Créer l\'acteur') }}
                   </button>
                 </form>
@@ -512,73 +541,75 @@ onMounted(() => {
         <div v-if="activeTab === 'directors'" class="animate-fade-in">
           <div class="flex flex-col xl:flex-row gap-8">
             <div class="xl:w-2/3 order-2 xl:order-1">
-              <h2 class="text-2xl text-white mb-4">Liste des réalisateurs</h2>
-              <div class="bg-[#1b1e29] border border-[#292d3e] rounded-lg overflow-hidden">
-                <table class="w-full text-left text-gray-400">
-                  <thead class="bg-[#252837] text-white uppercase text-xs">
-                  <tr>
-                    <th class="px-6 py-4">Nom</th>
-                    <th class="px-6 py-4">Prénom</th>
-                    <th class="px-6 py-4 hidden md:table-cell">Naissance</th>
-                    <th class="px-6 py-4 hidden md:table-cell">Décès</th>
-                    <th class="px-6 py-4 text-right">Actions</th>
-                  </tr>
+              <h2 class="font-display text-2xl text-white mb-6">Liste des <span class="italic text-gold-gradient">réalisateurs</span></h2>
+
+              <div class="bg-[#12121a] border border-[#d4af37]/10 overflow-hidden">
+                <table class="w-full text-left">
+                  <thead class="bg-[#0a0a0c] border-b border-[#d4af37]/10">
+                    <tr>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider">Nom</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider">Prénom</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider hidden md:table-cell">Naissance</th>
+                      <th class="px-6 py-4 font-body text-[#d4af37] text-xs uppercase tracking-wider text-right">Actions</th>
+                    </tr>
                   </thead>
-                  <tbody class="divide-y divide-[#292d3e]">
-                  <tr v-for="director in directorsList" :key="director.id" class="hover:bg-[#252837] transition">
-                    <td class="px-6 py-4 font-medium text-white">{{ director.lastname }}</td>
-                    <td class="px-6 py-4">{{ director.firstname }}</td>
-                    <td class="px-6 py-4 hidden md:table-cell">{{ formatDateDisplay(director.dob) }}</td>
-                    <td class="px-6 py-4 hidden md:table-cell">{{ formatDateDisplay(director.dod) }}</td>
-                    <td class="px-6 py-4 text-right space-x-4">
-                      <button @click="editDirector(director)" class="hover:cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
-                          <path fill="gray" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                        </svg>
-                      </button>
-                      <button @click="deleteDirector(director.id)" class="hover:cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                             fill="none" stroke="#e60000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <path d="M3 6h18"/>
-                          <path d="M8 6V4h8v2"/>
-                          <path d="M6 6l1 16h10l1-16"/>
-                          <path d="M10 11v7"/>
-                          <path d="M14 11v7"/>
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
+                  <tbody class="divide-y divide-[#d4af37]/10">
+                    <tr v-for="director in directorsList" :key="director.id" class="hover:bg-[#d4af37]/5 transition-colors">
+                      <td class="px-6 py-4 font-body text-white">{{ director.lastname }}</td>
+                      <td class="px-6 py-4 font-body text-[#c0c0c0]">{{ director.firstname }}</td>
+                      <td class="px-6 py-4 font-body text-[#c0c0c0] hidden md:table-cell">{{ formatDateDisplay(director.dob) }}</td>
+                      <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                          <button @click="editDirector(director)" class="hover:cursor-pointer p-2 text-[#c0c0c0] hover:text-[#d4af37] transition-colors">
+                            <Pencil class="w-4 h-4" />
+                          </button>
+                          <button @click="deleteDirector(director.id)" class="hover:cursor-pointer p-2 text-[#c0c0c0] hover:text-red-500 transition-colors">
+                            <Trash2 class="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr v-if="directorsList.length === 0">
+                      <td colspan="4" class="px-6 py-12 text-center text-[#c0c0c0] font-body">Aucun réalisateur trouvé.</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div class="xl:w-1/3 order-1 xl:order-2 mt-12">
-              <div class="sticky top-24 bg-[#1b1e29] border border-[#292d3e] rounded-xl p-6 shadow-xl">
-                <div class="flex justify-between items-center mb-6 border-b border-[#292d3e] pb-4">
-                  <h3 class="text-xl text-white font-bold">{{ directorForm.id ? 'Modifier' : 'Ajouter' }} un réalisateur</h3>
-                  <button v-if="directorForm.id" @click="resetDirectorForm" class="text-xs text-gray-400 hover:text-white hover:cursor-pointer uppercase tracking-wider">Annuler</button>
+            <div class="xl:w-1/3 order-1 xl:order-2">
+              <div class="sticky top-36 bg-[#12121a] border border-[#d4af37]/10 p-6">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#d4af37]/10">
+                  <h3 class="font-display text-xl text-white flex items-center gap-2">
+                    <Plus v-if="!directorForm.id" class="w-5 h-5 text-[#d4af37]" />
+                    <Pencil v-else class="w-5 h-5 text-[#d4af37]" />
+                    {{ directorForm.id ? 'Modifier' : 'Ajouter' }} un réalisateur
+                  </h3>
+                  <button v-if="directorForm.id" @click="resetDirectorForm" class="p-2 text-[#c0c0c0] hover:text-white transition-colors">
+                    <X class="w-5 h-5" />
+                  </button>
                 </div>
+
                 <form @submit.prevent="submitDirector" class="space-y-4">
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase mb-1">Prénom</label>
-                      <input v-model="directorForm.firstname" required class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Prénom</label>
+                      <input v-model="directorForm.firstname" required class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                     <div>
-                      <label class="block text-gray-400 text-xs uppercase mb-1">Nom</label>
-                      <input v-model="directorForm.lastname" required class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none" />
+                      <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Nom</label>
+                      <input v-model="directorForm.lastname" required class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                     </div>
                   </div>
                   <div>
-                    <label class="block text-gray-400 text-xs uppercase mb-1">Naissance</label>
-                    <input v-model="directorForm.dob" type="date" class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none" />
+                    <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Naissance</label>
+                    <input v-model="directorForm.dob" type="date" class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                   </div>
                   <div>
-                    <label class="block text-gray-400 text-xs uppercase mb-1">Décès</label>
-                    <input v-model="directorForm.dod" type="date" class="w-full px-4 py-2 bg-[#13151d] border border-[#292d3e] rounded text-white focus:border-[#f43a00] outline-none" />
+                    <label class="block text-[#c0c0c0] text-xs uppercase tracking-wider mb-2 font-body">Décès</label>
+                    <input v-model="directorForm.dod" type="date" class="w-full px-4 py-3 bg-[#0a0a0c] border border-[#d4af37]/20 text-white font-body focus:border-[#d4af37] outline-none transition-colors" />
                   </div>
-                  <button type="submit" :disabled="submittingDirector" class="w-full py-3 mt-2 bg-gradient-to-r from-[#f43a00] to-[#b12f01] hover:cursor-pointer hover:opacity-90 text-white rounded font-medium transition disabled:opacity-50">
+                  <button type="submit" :disabled="submittingDirector" class="hover:cursor-pointer w-full py-4 mt-4 bg-gradient-to-r from-[#d4af37] to-[#a68a2a] text-[#0a0a0c] font-body font-semibold hover:brightness-110 transition-all duration-300 disabled:opacity-50">
                     {{ submittingDirector ? 'Sauvegarde...' : (directorForm.id ? 'Mettre à jour' : 'Créer le réalisateur') }}
                   </button>
                 </form>
@@ -586,7 +617,6 @@ onMounted(() => {
             </div>
           </div>
         </div>
-
       </div>
     </section>
   </div>
