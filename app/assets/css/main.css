@@ -1,1 +1,255 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+/* ========= FONTS ========= */
+/* Playfair Display - Elegant serif for headings */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Outfit:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+
+@font-face {
+  font-family: "Boska";
+  src: url("/fonts/DancingScript-Regular.otf") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "BespokeSans";
+  src: url("/fonts/BespokeSans-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ========= THEME ========= */
+@theme {
+  --font-family-display: "Playfair Display", serif;
+  --font-family-body: "Outfit", sans-serif;
+  --font-family-accent: "Cormorant Garamond", serif;
+
+  /* Cinematic Noir Luxe Palette */
+  --color-noir: #0a0a0c;
+  --color-noir-light: #12121a;
+  --color-noir-medium: #1a1a24;
+  --color-gold: #d4af37;
+  --color-gold-light: #f4e4a6;
+  --color-gold-dark: #a68a2a;
+  --color-champagne: #f7e7ce;
+  --color-silver: #c0c0c0;
+  --color-cream: #faf8f5;
+}
+
+/* ========= BASE STYLES ========= */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-noir);
+  font-family: var(--font-family-body);
+  overflow-x: hidden;
+}
+
+/* ========= UTILITIES ========= */
+@layer utilities {
+  .font-display {
+    font-family: var(--font-family-display);
+  }
+
+  .font-body {
+    font-family: var(--font-family-body);
+  }
+
+  .font-accent {
+    font-family: var(--font-family-accent);
+  }
+
+  /* Gold gradient text */
+  .text-gold-gradient {
+    background: linear-gradient(135deg, var(--color-gold-light) 0%, var(--color-gold) 50%, var(--color-gold-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Film grain overlay */
+  .film-grain {
+    position: relative;
+  }
+
+  .film-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Cinematic vignette */
+  .vignette {
+    position: relative;
+  }
+
+  .vignette::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+    pointer-events: none;
+  }
+
+  /* Luxury border */
+  .border-luxury {
+    border: 1px solid rgba(212, 175, 55, 0.2);
+  }
+
+  /* Glow effect */
+  .glow-gold {
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.15);
+  }
+
+  /* Animated underline */
+  .animated-underline {
+    position: relative;
+    display: inline-block;
+  }
+
+  .animated-underline::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--color-gold), var(--color-champagne));
+    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .animated-underline:hover::after {
+    width: 100%;
+  }
+
+  /* Reveal animations */
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(40px);
+    animation: revealUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .reveal-up-delay-1 { animation-delay: 0.1s; }
+  .reveal-up-delay-2 { animation-delay: 0.2s; }
+  .reveal-up-delay-3 { animation-delay: 0.3s; }
+  .reveal-up-delay-4 { animation-delay: 0.4s; }
+  .reveal-up-delay-5 { animation-delay: 0.5s; }
+
+  @keyframes revealUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Parallax base */
+  .parallax-container {
+    perspective: 1000px;
+    overflow: hidden;
+  }
+
+  /* Shimmer effect */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.1) 50%,
+      transparent 100%
+    );
+    animation: shimmer 3s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  /* Floating animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Pulse glow */
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+    50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); }
+  }
+
+  /* Line decoration */
+  .line-decoration {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .line-decoration::before,
+  .line-decoration::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  }
+
+  /* Scroll indicator */
+  @keyframes scrollBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+
+  .scroll-indicator {
+    animation: scrollBounce 2s ease-in-out infinite;
+  }
+}
+
+/* ========= CUSTOM SCROLLBAR ========= */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-noir);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-gold-dark), var(--color-gold));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-light);
+}
+
+/* ========= SELECTION ========= */
+::selection {
+  background: var(--color-gold);
+  color: var(--color-noir);
+}
